@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Продажа авто</title>
+</head>
+<body>
+    <h3>Дилеры</h3>
+    <ul>
+        {% for dealer in dealers %}
+            <li>{{ dealer.name }} - {{ dealer.headquarters_location }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Дилерские Центры</h3>
+    <ul>
+        {% for center in dealer_centers %}
+            <li>{{ center.headquarters_location }} - {{ center.manager }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Автомобили</h3>
+    <ul>
+        {% for car in cars %}
+            <li>{{ car.brand }} - {{ car.car_model }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Продажи</h3>
+    <ul>
+        {% for sale in sales %}
+            <li>{{ sale.sale_data }} - {{ sale.sale_price }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Клиенты</h3>
+    <ul>
+        {% for customer in customers %}
+            <li>{{ customer.name }} - {{ customer.contact_info }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
