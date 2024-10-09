@@ -19,12 +19,14 @@ class DealerCenterSerializer(serializers.ModelSerializer):
 
 # Вложенный сериализатор для модели Car
 class CarSerializer(serializers.ModelSerializer):
+    dealer_FK = DealerSerializer(read_only=True)
+    dealer_FK_id = serializers.PrimaryKeyRelatedField(queryset=Dealer.objects.all(), write_only=True, source="dealer_FK")
     dealer_center_FK = DealerCenterSerializer(read_only=True)
     dealer_center_FK_id = serializers.PrimaryKeyRelatedField(queryset=DealerCenter.objects.all(), write_only=True, source="dealer_center_FK")
 
     class Meta:
         model = Car
-        fields = ['id', 'dealer_center_FK', 'brand', 'car_model', 'year', 'price', 'dealer_center_FK_id']
+        fields = ['id', 'dealer_center_FK', 'dealer_FK', 'dealer_FK_id', 'car_model', 'year', 'price', 'dealer_center_FK_id']
 
 # Вложенный сериализатор для модели Customer
 class CustomerSerializer(serializers.ModelSerializer):
@@ -39,12 +41,10 @@ class CustomerSerializer(serializers.ModelSerializer):
 class SaleSerializer(serializers.ModelSerializer):
     car_FK = CarSerializer(read_only=True)
     car_FK_id = serializers.PrimaryKeyRelatedField(queryset=Car.objects.all(), write_only=True, source="car_FK")
-    dealer_center_FK = DealerCenterSerializer(read_only=True)
-    dealer_center_FK_id = serializers.PrimaryKeyRelatedField(queryset=DealerCenter.objects.all(), write_only=True, source="dealer_center_FK")
     customer_FK = CustomerSerializer(read_only=True)
     customer_FK_id = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all(), write_only=True, source="customer_FK")
 
     class Meta:
         model = Sale
-        fields = ['id', 'car_FK', 'dealer_center_FK', 'customer_FK', 'sale_data', 'sale_price', 'car_FK_id', 'dealer_center_FK_id', 'customer_FK_id']
+        fields = ['id', 'car_FK', 'customer_FK', 'sale_data', 'sale_price', 'car_FK_id', 'customer_FK_id']
 

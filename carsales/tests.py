@@ -165,10 +165,11 @@ class CarCRUDTestCase(TestCase):
     # Тест создания автомобиля
     def test_create_car(self):
         dealercenter = baker.make("carsales.DealerCenter")
+        dealer = baker.make("carsales.Dealer")
     
         r = self.client.post("/api/cars/", {
-            "dealer_center_FK_id": dealercenter.id, 
-            "brand": "Honda", 
+            "dealer_center_FK_id": dealercenter.id,
+            "dealer_FK_id": dealer.id, 
             "car_model": "Civic", 
             "year": "2019",
             "price": "1500000"
@@ -181,40 +182,42 @@ class CarCRUDTestCase(TestCase):
 
         new_car = Car.objects.filter(id=new_car_id).first()
 
-        assert new_car.brand == 'Honda'
+        assert new_car.dealer_center_FK == dealercenter
+        assert new_car.dealer_FK == dealer
         assert new_car.car_model == 'Civic'
         assert new_car.year == '2019'
         assert new_car.price == '1500000'
-        assert new_car.dealer_center_FK == dealercenter
 
 
     # Тест получения списка автомобилей
     def test_get_car(self):
-        car = baker.make("carsales.Car")
+        car = baker.make("carsales.Car", dealer_FK=baker.make("carsales.Dealer"), dealer_center_FK=baker.make("carsales.DealerCenter"))
         r = self.client.get('/api/cars/')
         data = r.json()
-        
-        assert car.brand == data[0]['brand']
-        assert car.id == data[0]['id']
+
+        assert car.dealer_FK.id == data[0]['dealer_FK']['id']
+        assert car.dealer_center_FK.id == data[0]['dealer_center_FK']['id']
         assert car.car_model == data[0]['car_model']
         assert car.year == data[0]['year']
         assert car.price == data[0]['price']
         assert len(data) == 1
 
 
-    # Тест обновления автомобилей
+    # Тест обновления автомобиля
     def test_update_car(self):
-        car = baker.make(Car)
+        car = baker.make(Car, dealer_FK=baker.make("carsales.Dealer"), dealer_center_FK=baker.make("carsales.DealerCenter"))
 
         r = self.client.get(f"/api/cars/{car.id}/")
         data = r.json()
-        assert data['brand'] == car.brand
+        assert data['dealer_FK']['id'] == car.dealer_FK.id
+        assert data['dealer_center_FK']['id'] == car.dealer_center_FK.id
         assert data['car_model'] == car.car_model
         assert data['year'] == car.year
         assert data['price'] == car.price
 
         update_data = {
-            "brand": "Владивосток",
+            "dealer_FK_id": car.dealer_FK.id,
+            "dealer_center_FK_id": car.dealer_center_FK.id,
             "car_model": "Civic",
             "year": "2019",
             "price": car.price
@@ -223,13 +226,11 @@ class CarCRUDTestCase(TestCase):
         r = self.client.patch(f"/api/cars/{car.id}/", update_data)
 
         updated_data = r.json()
-        assert updated_data['brand'] == "Владивосток"
         assert updated_data['car_model'] == "Civic"
         assert updated_data['year'] == "2019"
         assert updated_data['price'] == car.price
 
         car.refresh_from_db()
-        assert car.brand == "Владивосток"
         assert car.car_model == "Civic"
         assert car.year == "2019"
         assert car.price == updated_data['price']
@@ -237,7 +238,7 @@ class CarCRUDTestCase(TestCase):
 
     # Тест удаления автомобиля
     def test_delete_car(self):
-        cars = baker.make("Car", 5)
+        cars = baker.make("carsales.Car", 5, dealer_FK=baker.make("carsales.Dealer"), dealer_center_FK=baker.make("carsales.DealerCenter"))
         r = self.client.get('/api/cars/')
         data = r.json()
         assert len(data) == 5
@@ -341,12 +342,10 @@ class SaleCRUDTestCase(TestCase):
     # Тест создания продажи
     def test_create_sale(self):
         car = baker.make("carsales.Car")
-        dealercenter = baker.make("carsales.DealerCenter")
         customer = baker.make("carsales.Customer")
     
         r = self.client.post("/api/sales/", {
             "car_FK_id": car.id, 
-            "dealer_center_FK_id": dealercenter.id, 
             "customer_FK_id": customer.id, 
             "sale_data": "17.09.2024", 
             "sale_price": "1500000"
@@ -362,7 +361,6 @@ class SaleCRUDTestCase(TestCase):
         assert new_sale.sale_data == '17.09.2024'
         assert new_sale.sale_price == '1500000'
         assert new_sale.car_FK == car
-        assert new_sale.dealer_center_FK == dealercenter
         assert new_sale.customer_FK == customer
 
 

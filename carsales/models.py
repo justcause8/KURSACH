@@ -26,7 +26,8 @@ class DealerCenter(models.Model):
 
 class Car(models.Model):
     dealer_center_FK = models.ForeignKey(DealerCenter, on_delete=models.CASCADE, null=True, verbose_name="Дилерский центр")
-    brand = models.TextField("Марка")
+    # brand = models.TextField("Марка")
+    dealer_FK = models.ForeignKey(Dealer, on_delete=models.CASCADE, null=True, verbose_name="Дилерский центр")
     car_model = models.TextField("Модель")
     year = models.TextField("Год")
     price = models.TextField("Цена")
@@ -54,7 +55,6 @@ class Customer(models.Model):
 
 class Sale(models.Model):
     car_FK = models.ForeignKey(Car, on_delete=models.CASCADE, null=True, verbose_name="Автомобиль")
-    dealer_center_FK = models.ForeignKey(DealerCenter, on_delete=models.CASCADE, null=True, verbose_name="Дилерский центр")
     customer_FK = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, verbose_name="Клиент")
     sale_data = models.TextField("Дата продажи")
     sale_price = models.TextField("Цена продажи")

@@ -1,4 +1,11 @@
 <script setup>
+import { onBeforeMount } from 'vue';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+
+onBeforeMount(() => {
+  axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
+})
 
 </script>
 
@@ -14,7 +21,7 @@
         <div class="collapse navbar-collapse justify-cintent-between" id="navbarNav">
           <ul class="navbar-nav">
             <li class="nav-item">
-              <router-link class="nav-link" to="/">Dealer-centers</router-link>
+              <router-link class="nav-link" to="/dealer-centers">Dealer-centers</router-link>
             </li>
             <li class="nav-item">
               <router-link class="nav-link" to="/dealers">Dealers</router-link>
