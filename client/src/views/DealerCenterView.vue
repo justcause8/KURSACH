@@ -1,12 +1,28 @@
 <script setup>
-import { compile, computed, onMounted, ref, onBeforeMount } from 'vue';
+import { ref, onBeforeMount } from 'vue';
 import axios from 'axios';
 import _ from 'lodash';
+import { Modal } from 'bootstrap'
 
 const dealer_centers = ref({});
 const dealers = ref({});
 const dealercenterToAdd = ref({});
 const dealercenterToEdit = ref({});
+const confirmDeleteModalRef = ref();
+const dealerCenterToDelete = ref(null);
+
+function onRemoveClick(dealercenter) {
+  dealerCenterToDelete.value = dealercenter;
+  const confirmModal = new Modal(confirmDeleteModalRef.value);
+  confirmModal.show();
+}
+
+async function onConfirmDelete() {
+  if (dealerCenterToDelete.value) {
+    await axios.delete(`/api/dealer-centers/${dealerCenterToDelete.value.id}/`);
+    await fetchDealerCenters();
+  }
+}
 
 async function fetchDealerCenters() {
   const r = await axios.get("/api/dealer-centers/")
@@ -36,11 +52,6 @@ async function onDealerCenterUpdateClick() {
   await axios.put(`/api/dealer-centers/${dealercenterToEdit.value.id}/`, {
     ...dealercenterToEdit.value
   });
-  await fetchDealerCenters();
-}
-
-async function onRemoveClick(dealercenter) {
-  await axios.delete(`/api/dealer-centers/${dealercenter.id}/`)
   await fetchDealerCenters();
 }
 
@@ -103,7 +114,7 @@ onBeforeMount(async () => {
       </div>
     </div>
   </div>
-  <!-- Modal -->
+
   <div class="modal fade" id="editDealerCenterModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -145,6 +156,24 @@ onBeforeMount(async () => {
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
           <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
             @click="onDealerCenterUpdateClick">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" ref="confirmDeleteModalRef" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Подтверждение удаления</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Вы уверены, что хотите удалить "{{ dealerCenterToDelete?.headquarters_location }}"?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="button" class="btn btn-danger" @click="onConfirmDelete" data-bs-dismiss="modal">Удалить</button>
         </div>
       </div>
     </div>

@@ -1,13 +1,29 @@
 <script setup>
-import { compile, computed, onMounted, ref, onBeforeMount } from 'vue';
+import { ref, onBeforeMount } from 'vue';
 import axios from 'axios';
 import _ from 'lodash';
+import { Modal } from 'bootstrap'
 
 const sales = ref([]);
 const cars = ref([]);
 const customers = ref([]);
 const salesToAdd = ref({});
 const salesToEdit = ref({});
+const confirmDeleteModalRef = ref();
+const saleToDelete = ref(null);
+
+function onRemoveClick(sale) {
+    saleToDelete.value = sale;
+    const confirmModal = new Modal(confirmDeleteModalRef.value);
+    confirmModal.show();
+}
+
+async function onConfirmDelete() {
+    if (saleToDelete.value) {
+        await axios.delete(`/api/sales/${saleToDelete.value.id}/`);
+        await fetchSales();
+    }
+}
 
 async function fetchSales() {
     const r = await axios.get("/api/sales/");
@@ -41,11 +57,6 @@ async function onSalesUpdateClick() {
     await axios.put(`/api/sales/${salesToEdit.value.id}/`, {
         ...salesToEdit.value
     });
-    await fetchSales();
-}
-
-async function onRemoveClick(sale) {
-    await axios.delete(`/api/sales/${sale.id}/`);
     await fetchSales();
 }
 
@@ -114,7 +125,6 @@ onBeforeMount(async () => {
         </div>
     </div>
 
-    <!-- Modal для редактирования -->
     <div class="modal fade" id="editSalesModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -156,7 +166,27 @@ onBeforeMount(async () => {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onSalesUpdateClick">Сохранить</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                        @click="onSalesUpdateClick">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" ref="confirmDeleteModalRef" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтверждение удаления</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить продажу от "{{ saleToDelete?.sale_data }}"?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-danger" @click="onConfirmDelete"
+                        data-bs-dismiss="modal">Удалить</button>
                 </div>
             </div>
         </div>

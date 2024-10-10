@@ -3,6 +3,7 @@ from django.db import models
 class Dealer(models.Model):
     name = models.TextField("Название дилера")
     headquarters_location  = models.TextField("Местоположение главного офиса")
+    picture = models.ImageField("Изображение", null=True, upload_to="dealers")
 
     class Meta:
         verbose_name = "Дилер"
@@ -26,11 +27,11 @@ class DealerCenter(models.Model):
 
 class Car(models.Model):
     dealer_center_FK = models.ForeignKey(DealerCenter, on_delete=models.CASCADE, null=True, verbose_name="Дилерский центр")
-    # brand = models.TextField("Марка")
     dealer_FK = models.ForeignKey(Dealer, on_delete=models.CASCADE, null=True, verbose_name="Дилерский центр")
     car_model = models.TextField("Модель")
     year = models.TextField("Год")
     price = models.TextField("Цена")
+    picture = models.ImageField("Изображение", null=True, upload_to="cars")
 
     class Meta:
         verbose_name = "Автомобиль"

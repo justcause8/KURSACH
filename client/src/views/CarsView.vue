@@ -1,7 +1,7 @@
 <script setup>
-import { compile, computed, onMounted, ref, onBeforeMount } from 'vue';
+import { ref, computed, onBeforeMount } from 'vue';
 import axios from 'axios';
-import _ from 'lodash';
+import { Modal } from 'bootstrap'
 
 const cars = ref([]);
 const dealer_centers = ref([]);
@@ -14,6 +14,33 @@ const carsToAdd = ref({
     price: ''
 });
 const carsToEdit = ref({});
+const carPictureRef = ref('');
+const carPictureRefEdit = ref('');
+const carsAddImageUrl = ref('');
+const carsEditImageUrl = ref('');
+const selectedImageUrl = ref(null);
+const imageModalRef = ref();
+const confirmDeleteModalRef = ref();
+const carToDelete = ref(null);
+
+function onRemoveClick(car) {
+    carToDelete.value = car;
+    const confirmModal = new Modal(confirmDeleteModalRef.value);
+    confirmModal.show();
+}
+
+async function onConfirmDelete() {
+    if (carToDelete.value) {
+        await axios.delete(`/api/cars/${carToDelete.value.id}/`);
+        await fetchCars();
+    }
+}
+
+function onImageClick(imageUrl) {
+    selectedImageUrl.value = imageUrl;
+    const imageModal = new Modal(imageModalRef.value);
+    imageModal.show();
+}
 
 async function fetchCars() {
     const r = await axios.get("/api/cars/");
@@ -31,7 +58,23 @@ async function fetchDealers() {
 }
 
 async function onCarsAdd() {
-    await axios.post("/api/cars/", { ...carsToAdd.value });
+    const formData = new FormData();
+
+    formData.append('car_model', carsToAdd.value.car_model);
+    formData.append('year', carsToAdd.value.year);
+    formData.append('price', carsToAdd.value.price);
+    formData.append('dealer_FK_id', carsToAdd.value.dealer_FK_id);
+    formData.append('dealer_center_FK_id', carsToAdd.value.dealer_center_FK_id);
+
+    if (carPictureRef.value && carPictureRef.value.files.length > 0) {
+        formData.append('picture', carPictureRef.value.files[0]);
+    }
+
+    await axios.post("/api/cars/", formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
     await fetchCars();
 }
 
@@ -41,32 +84,51 @@ async function onCarsEditClick(car) {
         dealer_FK_id: car.dealer_FK.id,
         dealer_center_FK_id: car.dealer_center_FK.id,
     };
+    carsEditImageUrl.value = car.picture;
 }
 
 async function onCarsUpdateClick() {
-    await axios.put(`/api/cars/${carsToEdit.value.id}/`, {
-        ...carsToEdit.value
+    const formData = new FormData();
+
+    if (carPictureRefEdit.value && carPictureRefEdit.value.files.length > 0) {
+        formData.append('picture', carPictureRefEdit.value.files[0]);
+    }
+
+    formData.set('car_model', carsToEdit.value.car_model);
+    formData.set('year', carsToEdit.value.year);
+    formData.set('price', carsToEdit.value.price);
+    formData.set('dealer_FK_id', carsToEdit.value.dealer_FK_id);
+    formData.set('dealer_center_FK_id', carsToEdit.value.dealer_center_FK_id);
+
+    await axios.put(`/api/cars/${carsToEdit.value.id}/`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
     });
     await fetchCars();
 }
 
-async function onRemoveClick(car) {
-    await axios.delete(`/api/cars/${car.id}/`);
-    await fetchCars();
+async function carsAddPictureChange() {
+    if (carPictureRef.value && carPictureRef.value.files.length > 0) {
+        carsAddImageUrl.value = URL.createObjectURL(carPictureRef.value.files[0]);
+    }
 }
 
-// Вычисляемое свойство для фильтрации дилерских центров по выбранному дилеру
+async function carsEditPictureChange() {
+    if (carPictureRefEdit.value && carPictureRefEdit.value.files.length > 0) {
+        carsEditImageUrl.value = URL.createObjectURL(carPictureRefEdit.value.files[0]);
+    }
+}
+
 const filteredDealerCenters = computed(() => {
     if (!carsToAdd.value.dealer_FK_id) return [];
     return dealer_centers.value.filter(center => center.dealer_FK.id === carsToAdd.value.dealer_FK_id);
 });
 
-// Вычисляемое свойство для фильтрации дилерских центров для редактирования
 const filteredDealerCentersForEdit = computed(() => {
     if (!carsToEdit.value.dealer_FK_id) return [];
     return dealer_centers.value.filter(center => center.dealer_FK.id === carsToEdit.value.dealer_FK_id);
 });
-
 
 onBeforeMount(async () => {
     await fetchCars();
@@ -78,7 +140,7 @@ onBeforeMount(async () => {
 <template>
     <div class="container-fluid">
         <div class="p-2">
-            <form @submit.prevent.stop="onCarsAdd">
+            <form @submit.prevent="onCarsAdd">
                 <div class="row">
                     <div class="col">
                         <div class="form-floating">
@@ -109,38 +171,45 @@ onBeforeMount(async () => {
                     <div class="col">
                         <div class="form-floating">
                             <select class="form-select" v-model="carsToAdd.dealer_center_FK_id" required>
-                                <option :value="d.id" v-for="d in filteredDealerCenters" :key="d.id">
-                                    {{ d.headquarters_location }}
+                                <option :value="d.id" v-for="d in filteredDealerCenters">{{ d.headquarters_location }}
                                 </option>
                             </select>
                             <label for="floatingInput">Dealer Center</label>
                         </div>
                     </div>
                     <div class="col-auto">
+                        <input class="form-control" type="file" ref="carPictureRef" @change="carsAddPictureChange">
+                    </div>
+                    <div class="col-auto">
+                        <img v-if="carsAddImageUrl" :src="carsAddImageUrl" style="max-height: 60px;" alt="">
+                    </div>
+                    <div class="col-auto">
                         <button class="btn btn-primary">Добавить</button>
                     </div>
                 </div>
             </form>
-            <div>
-                <div v-for='item in cars' class="cars-item">
-                    <div>{{ item.dealer_FK.name }}</div>
-                    <div>{{ item.car_model }}</div>
-                    <div>{{ item.year }}</div>
-                    <div>{{ item.price }}</div>
-                    <div>{{ item.dealer_center_FK.headquarters_location }}</div>
-                    <button class="btn btn-success" @click="onCarsEditClick(item)" data-bs-toggle="modal"
-                        data-bs-target="#editCarsModal">
-                        <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button class="btn btn-danger" @click="onRemoveClick(item)">
-                        <i class="bi bi-x"></i>
-                    </button>
+
+            <div v-for='item in cars' class="cars-item">
+                <div>{{ item.dealer_FK.name }}</div>
+                <div>{{ item.car_model }}</div>
+                <div>{{ item.year }}</div>
+                <div>{{ item.price }}</div>
+                <div>{{ item.dealer_center_FK.headquarters_location }}</div>
+                <div v-if="item.picture">
+                    <img :src="item.picture" style="max-height: 60px; cursor: pointer;" alt="Car image"
+                        @click="onImageClick(item.picture)">
                 </div>
+                <button class="btn btn-success" @click="onCarsEditClick(item)" data-bs-toggle="modal"
+                    data-bs-target="#editCarsModal">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+                <button class="btn btn-danger" @click="onRemoveClick(item)">
+                    <i class="bi bi-x"></i>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal для редактирования -->
     <div class="modal fade" id="editCarsModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -152,44 +221,81 @@ onBeforeMount(async () => {
                     <div class="row">
                         <div class="col-auto">
                             <div class="form-floating">
-                                <select class="form-select" v-model="carsToEdit.dealer_FK_id">
-                                    <option :value="d.id" v-for="d in dealers">{{ d.name }}</option>
+                                <select class="form-select" v-model="carsToEdit.dealer_FK_id" required>
+                                    <option :value="d.id" v-for="d in dealers" :key="d.id">{{ d.name }}</option>
                                 </select>
                                 <label for="floatingInput">Dealer</label>
                             </div>
                         </div>
                         <div class="col">
                             <div class="form-floating">
-                                <input type="text" class="form-control" v-model="carsToEdit.car_model">
+                                <input type="text" class="form-control" v-model="carsToEdit.car_model" required>
                                 <label for="floatingInput">Model</label>
                             </div>
                         </div>
                         <div class="col">
                             <div class="form-floating">
-                                <input type="text" class="form-control" v-model="carsToEdit.year">
+                                <input type="text" class="form-control" v-model="carsToEdit.year" required>
                                 <label for="floatingInput">Year</label>
                             </div>
                         </div>
                         <div class="col">
                             <div class="form-floating">
-                                <input type="text" class="form-control" v-model="carsToEdit.price">
+                                <input type="text" class="form-control" v-model="carsToEdit.price" required>
                                 <label for="floatingInput">Price</label>
                             </div>
                         </div>
                         <div class="col-auto">
                             <div class="form-floating">
-                                <select class="form-select" v-model="carsToEdit.dealer_center_FK_id">
-                                    <option :value="d.id" v-for="d in filteredDealerCentersForEdit">{{ d.headquarters_location }}</option>
+                                <select class="form-select" v-model="carsToEdit.dealer_centers_FK_id" required>
+                                    <option :value="d.id" v-for="d in filteredDealerCentersForEdit" :key="d.id">{{
+                                        d.headquarters_location }}</option>
                                 </select>
                                 <label for="floatingInput">Dealer center</label>
                             </div>
+                        </div>
+                        <div class="col-auto">
+                            <input class="form-control" type="file" ref="carPictureRefEdit"
+                                @change="carsEditPictureChange">
+                        </div>
+                        <div class="col-auto">
+                            <img v-if="carsEditImageUrl" :src="carsEditImageUrl" style="max-height: 60px;" alt="">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
-                        @click="onCarsUpdateClick">Сохранить</button>
+                        @click="onCarsUpdateClick">Обновить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" ref="imageModalRef" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <img :src="selectedImageUrl" alt="Car Image" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" ref="confirmDeleteModalRef" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтверждение удаления</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить "{{ carToDelete?.car_model }}"?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-danger" @click="onConfirmDelete"
+                        data-bs-dismiss="modal">Удалить</button>
                 </div>
             </div>
         </div>
@@ -204,7 +310,7 @@ onBeforeMount(async () => {
     box-shadow: 0 0 4px silver;
     border-radius: 8px;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr auto auto auto auto;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr auto auto auto;
     align-content: center;
     align-items: center;
     gap: 16px;

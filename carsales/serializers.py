@@ -5,7 +5,7 @@ from carsales.models import Dealer, DealerCenter, Car, Sale, Customer
 class DealerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dealer
-        fields = ['id', 'name', 'headquarters_location']
+        fields = ['id', 'name', 'headquarters_location', 'picture']
 
 # Вложенный сериализатор для модели DealerCenter
 class DealerCenterSerializer(serializers.ModelSerializer):
@@ -26,7 +26,7 @@ class CarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Car
-        fields = ['id', 'dealer_center_FK', 'dealer_FK', 'dealer_FK_id', 'car_model', 'year', 'price', 'dealer_center_FK_id']
+        fields = ['id', 'dealer_center_FK', 'dealer_FK', 'dealer_FK_id', 'car_model', 'year', 'price', 'dealer_center_FK_id', 'picture']
 
 # Вложенный сериализатор для модели Customer
 class CustomerSerializer(serializers.ModelSerializer):

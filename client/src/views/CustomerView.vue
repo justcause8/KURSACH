@@ -1,39 +1,50 @@
 <script setup>
 import { ref, onBeforeMount } from 'vue';
 import axios from 'axios';
+import { Modal } from 'bootstrap'
 
 const cars = ref([]);
 const customers = ref([]);
 const customersToAdd = ref({});
 const customersToEdit = ref({});
+const confirmDeleteModalRef = ref();
+const customerToDelete = ref(null);
 
-// Получение списка клиентов
+function onRemoveClick(customer) {
+    customerToDelete.value = customer;
+    const confirmModal = new Modal(confirmDeleteModalRef.value);
+    confirmModal.show();
+}
+
+async function onConfirmDelete() {
+    if (customerToDelete.value) {
+        await axios.delete(`/api/customers/${customerToDelete.value.id}/`);
+        await fetchCustomers();
+    }
+}
+
 async function fetchCustomers() {
     const r = await axios.get("/api/customers/");
     customers.value = r.data;
 }
 
-// Получение списка автомобилей
 async function fetchCars() {
     const r = await axios.get("/api/cars/");
     cars.value = r.data;
 }
 
-// Добавление клиента
 async function onCustomersAdd() {
     await axios.post("/api/customers/", { ...customersToAdd.value });
     await fetchCustomers();
 }
 
-// Редактирование клиента
 async function onCustomersEditClick(customer) {
     customersToEdit.value = {
         ...customer,
-        car_FK_id: customer.car_FK.id, // Исправлено на использование правильного объекта
+        car_FK_id: customer.car_FK.id,
     };
 }
 
-// Обновление данных клиента
 async function onCustomersUpdateClick() {
     await axios.put(`/api/customers/${customersToEdit.value.id}/`, {
         ...customersToEdit.value
@@ -41,13 +52,6 @@ async function onCustomersUpdateClick() {
     await fetchCustomers();
 }
 
-// Удаление клиента
-async function onRemoveClick(customer) {
-    await axios.delete(`/api/customers/${customer.id}/`);
-    await fetchCustomers();
-}
-
-// Инициализация данных при загрузке компонента
 onBeforeMount(async () => {
     await fetchCars();
     await fetchCustomers();
@@ -61,7 +65,6 @@ onBeforeMount(async () => {
                 <div class="row">
                     <div class="col">
                         <div class="form-floating">
-                            <!-- Выбор модели автомобиля -->
                             <select class="form-select" v-model="customersToAdd.car_FK_id" required>
                                 <option :value="c.id" v-for="c in cars" :key="c.id">{{ c.car_model }}</option>
                             </select>
@@ -70,14 +73,12 @@ onBeforeMount(async () => {
                     </div>
                     <div class="col">
                         <div class="form-floating">
-                            <!-- Имя клиента -->
                             <input type="text" class="form-control" v-model="customersToAdd.name" required>
                             <label for="floatingInput">Name</label>
                         </div>
                     </div>
                     <div class="col">
                         <div class="form-floating">
-                            <!-- Контактная информация -->
                             <input type="text" class="form-control" v-model="customersToAdd.contact_info" required>
                             <label for="floatingInput">Contact info</label>
                         </div>
@@ -88,17 +89,14 @@ onBeforeMount(async () => {
                 </div>
             </form>
             <div>
-                <!-- Список клиентов -->
                 <div v-for="customer in customers" :key="customer.id" class="customers-item">
                     <div>{{ customer.car_FK.car_model }}</div>
                     <div>{{ customer.name }}</div>
                     <div>{{ customer.contact_info }}</div>
-                    <!-- Кнопка для редактирования -->
                     <button class="btn btn-success" @click="onCustomersEditClick(customer)" data-bs-toggle="modal"
                         data-bs-target="#editCustomersModal">
                         <i class="bi bi-pencil-square"></i>
                     </button>
-                    <!-- Кнопка для удаления -->
                     <button class="btn btn-danger" @click="onRemoveClick(customer)">
                         <i class="bi bi-x"></i>
                     </button>
@@ -107,7 +105,6 @@ onBeforeMount(async () => {
         </div>
     </div>
 
-    <!-- Модальное окно для редактирования клиента -->
     <div class="modal fade" id="editCustomersModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -141,7 +138,27 @@ onBeforeMount(async () => {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="onCustomersUpdateClick">Сохранить</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                        @click="onCustomersUpdateClick">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" ref="confirmDeleteModalRef" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтверждение удаления</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить "{{ customerToDelete?.name }}"?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-danger" @click="onConfirmDelete"
+                        data-bs-dismiss="modal">Удалить</button>
                 </div>
             </div>
         </div>
