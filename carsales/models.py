@@ -4,6 +4,7 @@ class Dealer(models.Model):
     name = models.TextField("Название дилера")
     headquarters_location  = models.TextField("Местоположение главного офиса")
     picture = models.ImageField("Изображение", null=True, upload_to="dealers")
+    user = models.ForeignKey("auth.User", verbose_name="Пользователь", on_delete=models.CASCADE, null=True)
 
     class Meta:
         verbose_name = "Дилер"
@@ -17,6 +18,8 @@ class DealerCenter(models.Model):
     headquarters_location  = models.TextField("Местоположение центра")
     contact  = models.TextField("Контактная информация")
     manager = models.TextField("Имя управляющего")
+    user = models.ForeignKey("auth.User", verbose_name="Пользователь", on_delete=models.CASCADE, null=True)
+
 
     class Meta:
         verbose_name = "Дилерский центр"
@@ -32,6 +35,7 @@ class Car(models.Model):
     year = models.TextField("Год")
     price = models.TextField("Цена")
     picture = models.ImageField("Изображение", null=True, upload_to="cars")
+    user = models.ForeignKey("auth.User", verbose_name="Пользователь", on_delete=models.CASCADE, null=True)
 
     class Meta:
         verbose_name = "Автомобиль"
@@ -45,6 +49,7 @@ class Customer(models.Model):
     car_FK = models.ForeignKey(Car, on_delete=models.CASCADE, null=True, verbose_name="Автомобиль")
     name = models.TextField("ФИО")
     contact_info = models.TextField("Контактная информация")
+    user = models.ForeignKey("auth.User", verbose_name="Пользователь", on_delete=models.CASCADE, null=True)
 
     class Meta:
         verbose_name = "Клиент"
@@ -57,12 +62,13 @@ class Customer(models.Model):
 class Sale(models.Model):
     car_FK = models.ForeignKey(Car, on_delete=models.CASCADE, null=True, verbose_name="Автомобиль")
     customer_FK = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, verbose_name="Клиент")
-    sale_data = models.TextField("Дата продажи")
+    sale_data = models.DateField("Дата продажи")
     sale_price = models.TextField("Цена продажи")
+    user = models.ForeignKey("auth.User", verbose_name="Пользователь", on_delete=models.CASCADE, null=True)
 
     class Meta:
         verbose_name = "Продажа"
         verbose_name_plural = "Продажи"
     
     def __str__(self) -> str:
-        return self.sale_data
+        return str(self.sale_data)

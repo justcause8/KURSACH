@@ -1,3 +1,6 @@
 django==5.1
 djangorestframework==3.15.2
 pytest-django==4.9.0
+model-bakery==1.19.5
+# pillow
+Faker==30.8.1

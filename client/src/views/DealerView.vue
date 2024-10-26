@@ -21,6 +21,7 @@ const selectedImageUrl = ref();
 const imageModalRef = ref();
 const confirmDeleteModalRef = ref();
 const dealerToDelete = ref(null);
+const stats = ref({});
 
 function onImageClick(imageUrl) {
     selectedImageUrl.value = imageUrl;
@@ -100,8 +101,14 @@ async function onDealersUpdateClick() {
     await fetchDealers();
 }
 
+async function fetchStats() {
+    const r = await axios.get("/api/dealers/stats/");
+    stats.value = r.data;
+}
+
 onBeforeMount(async () => {
     await fetchDealers();
+    await fetchStats();
 });
 </script>
 
@@ -130,8 +137,12 @@ onBeforeMount(async () => {
                     <div class="col-auto">
                         <img v-if="dealersAddImageUrl" :src="dealersAddImageUrl" style="max-height: 60px;" alt="">
                     </div>
-                    <div class="col-auto">
+                    <div class="col-auto d-flex align-self-center">
                         <button class="btn btn-primary">Добавить</button>
+                    </div>
+                    <div class="col-auto d-flex align-self-center">
+                        <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
+                            data-bs-target="#statsModal">Статистика</button>
                     </div>
                 </div>
             </form>
@@ -220,6 +231,25 @@ onBeforeMount(async () => {
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                     <button type="button" class="btn btn-danger" @click="onConfirmDelete"
                         data-bs-dismiss="modal">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для статистики -->
+    <div class="modal fade" id="statsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Статистика Дилеров</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Количество Дилеров: {{ stats.count }}</p>
+                    <p>Максимальный ID Дилера: {{ stats.max }}</p>
+                    <p>Минимальный ID Дилера: {{ stats.min }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
                 </div>
             </div>
         </div>

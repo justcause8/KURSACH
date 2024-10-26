@@ -11,6 +11,7 @@ const salesToAdd = ref({});
 const salesToEdit = ref({});
 const confirmDeleteModalRef = ref();
 const saleToDelete = ref(null);
+const stats = ref({});
 
 function onRemoveClick(sale) {
     saleToDelete.value = sale;
@@ -60,10 +61,16 @@ async function onSalesUpdateClick() {
     await fetchSales();
 }
 
+async function fetchStats() {
+    const r = await axios.get("/api/sales/stats/");
+    stats.value = r.data;
+}
+
 onBeforeMount(async () => {
     await fetchCars();
     await fetchSales();
     await fetchCustomers();
+    await fetchStats();
 });
 
 </script>
@@ -92,7 +99,7 @@ onBeforeMount(async () => {
                     </div>
                     <div class="col">
                         <div class="form-floating">
-                            <input type="text" class="form-control" v-model="salesToAdd.sale_data" required>
+                            <input type="date" class="form-control" v-model="salesToAdd.sale_data" required>
                             <label for="floatingInput">Sale Date</label>
                         </div>
                     </div>
@@ -102,11 +109,16 @@ onBeforeMount(async () => {
                             <label for="floatingInput">Sale Price</label>
                         </div>
                     </div>
-                    <div class="col-auto">
+                    <div class="col-auto d-flex align-self-center">
                         <button class="btn btn-primary">Добавить</button>
+                    </div>
+                    <div class="col-auto d-flex align-self-center">
+                        <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
+                            data-bs-target="#statsModal">Статистика</button>
                     </div>
                 </div>
             </form>
+
             <div>
                 <div v-for="item in sales" :key="item.id" class="sales-item">
                     <div>{{ item.car_FK.car_model }}</div>
@@ -152,7 +164,7 @@ onBeforeMount(async () => {
                         </div>
                         <div class="col-auto">
                             <div class="form-floating">
-                                <input type="text" class="form-control" v-model="salesToEdit.sale_data">
+                                <input type="date" class="form-control" v-model="salesToEdit.sale_data">
                                 <label for="floatingInput">Sale Date</label>
                             </div>
                         </div>
@@ -187,6 +199,25 @@ onBeforeMount(async () => {
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
                     <button type="button" class="btn btn-danger" @click="onConfirmDelete"
                         data-bs-dismiss="modal">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для статистики -->
+    <div class="modal fade" id="statsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Статистика Продаж</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Количество Продаж: {{ stats.count }}</p>
+                    <p>Максимальный ID Продажи: {{ stats.max }}</p>
+                    <p>Минимальный ID Продажи: {{ stats.min }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
                 </div>
             </div>
         </div>

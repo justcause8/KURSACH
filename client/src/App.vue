@@ -13,12 +13,12 @@ onBeforeMount(() => {
   <div class="container">
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
       <div class="container-fluid">
-        <a class="navbar-brand" href="#">Navbar</a>
+        <a class="navbar-brand" href="#">Продажа авто</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
           aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse justify-cintent-between" id="navbarNav">
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
           <ul class="navbar-nav">
             <li class="nav-item">
               <router-link class="nav-link" to="/dealer-centers">Dealer-centers</router-link>
@@ -37,7 +37,7 @@ onBeforeMount(() => {
             </li>
           </ul>
 
-          <ul class="navbar-nav">
+          <ul class="navbar-nav ms-auto">
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                 aria-expanded="false">
@@ -47,7 +47,6 @@ onBeforeMount(() => {
                 <li><a class="dropdown-item" href="/admin">Админка</a></li>
               </ul>
             </li>
-
           </ul>
         </div>
       </div>

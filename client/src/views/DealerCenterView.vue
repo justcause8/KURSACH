@@ -10,6 +10,7 @@ const dealercenterToAdd = ref({});
 const dealercenterToEdit = ref({});
 const confirmDeleteModalRef = ref();
 const dealerCenterToDelete = ref(null);
+const stats = ref({});
 
 function onRemoveClick(dealercenter) {
   dealerCenterToDelete.value = dealercenter;
@@ -55,9 +56,15 @@ async function onDealerCenterUpdateClick() {
   await fetchDealerCenters();
 }
 
+async function fetchStats() {
+  const r = await axios.get("/api/dealer-centers/stats/");
+  stats.value = r.data;
+}
+
 onBeforeMount(async () => {
   await fetchDealerCenters();
   await fetchDealers();
+  await fetchStats();
 })
 
 </script>
@@ -92,8 +99,12 @@ onBeforeMount(async () => {
               <label for="floatingInput">Dealer</label>
             </div>
           </div>
-          <div class="col-auto">
+          <div class="col-auto d-flex align-self-center">
             <button class="btn btn-primary">Добавить</button>
+          </div>
+          <div class="col-auto d-flex align-self-center">
+            <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
+              data-bs-target="#statsModal">Статистика</button>
           </div>
         </div>
       </form>
@@ -174,6 +185,25 @@ onBeforeMount(async () => {
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
           <button type="button" class="btn btn-danger" @click="onConfirmDelete" data-bs-dismiss="modal">Удалить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для статистики -->
+  <div class="modal fade" id="statsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Статистика Дилерских центров</h5>
+        </div>
+        <div class="modal-body">
+          <p>Количество Дилерских центров: {{ stats.count }}</p>
+          <p>Максимальный ID Дилерского центра: {{ stats.max }}</p>
+          <p>Минимальный ID Дилерского центра: {{ stats.min }}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
         </div>
       </div>
     </div>
