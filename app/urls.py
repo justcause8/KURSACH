@@ -24,7 +24,7 @@ from django.conf.urls.static import static
 from carsales import views
 from carsales.api import (
     DealerViewSet, DealerCenterViewSet,
-    CarViewSet, SaleViewSet, CustomerViewSet
+    CarViewSet, SaleViewSet, CustomerViewSet, UserViewSet
 )
 
 router = DefaultRouter()
@@ -33,6 +33,7 @@ router.register(r'dealer-centers', DealerCenterViewSet)
 router.register(r'cars', CarViewSet)
 router.register(r'sales', SaleViewSet)
 router.register(r'customers', CustomerViewSet)
+router.register(r'user', UserViewSet, basename="user")
 
 urlpatterns = [
     path('', views.ShowCarsalesView.as_view()),

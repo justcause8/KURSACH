@@ -4,6 +4,7 @@ from carsales.models import Dealer, DealerCenter, Car, Sale, Customer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Count, Avg, Max, Min
+from django.contrib.auth import authenticate, login, logout
 from rest_framework.permissions import IsAuthenticated
 from carsales.serializers import (
     DealerSerializer, DealerCenterSerializer,
@@ -149,3 +150,31 @@ class SaleViewSet(BaseUserViewSet):
 
         serializer = self.StatsSerializer(instance=stats)
         return Response(serializer.data)
+
+class UserViewSet(GenericViewSet):
+    @action(url_path="info", methods=["GET"], detail=False)
+    def get_info(self, request, *args, **kwargs):
+        data = {
+            "is_authenticated": request.user.is_authenticated
+        }
+        if request.user.is_authenticated:
+            data.update({
+                "username": request.user.username,
+                "user_id": request.user.id
+            })
+        return Response(data)
+
+    @action(url_path="login", methods=["POST"], detail=False)
+    def login(self, request, *args, **kwargs):
+        username = request.data.get("user")
+        password = request.data.get("password")
+
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+        return Response({})
+
+    @action(url_path="logout", methods=["POST"], detail=False)
+    def logout(self, request, *args, **kwargs):
+        logout(request)
+        return Response({})

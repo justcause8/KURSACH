@@ -2,11 +2,35 @@
 import { onBeforeMount } from 'vue';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import useUserStore from './stores/userStore';
+import { storeToRefs } from 'pinia';
+
+const userStore = useUserStore();
+const { isAuthenticated, username, userId } = storeToRefs(userStore);
 
 onBeforeMount(() => {
   axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
 })
 
+async function logout() {
+  const csrfToken = Cookies.get('csrftoken');
+  try {
+    const response = await axios.post('/api/user/logout/', {}, {
+      headers: {
+        'X-CSRFToken': csrfToken
+      }
+    });
+    if (response.data.success) {
+      userStore.resetUser();
+      window.location.reload();
+    } 
+    else {
+      console.error('Ошибка выхода, попробуйте еще раз.');
+    }
+  } catch (error) {
+    console.error('Ошибка выхода:', error);
+  }
+}
 </script>
 
 <template>
@@ -41,9 +65,15 @@ onBeforeMount(() => {
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                 aria-expanded="false">
-                Пользователь
+                {{ username }}
               </a>
               <ul class="dropdown-menu">
+                <li class="nav-item">
+                  <router-link class="nav-link; dropdown-item" to="/login">Войти</router-link>
+                </li>
+                <li class="nav-item">
+                  <a class="dropdown-item" @click="logout">Выход</a>
+                </li>
                 <li><a class="dropdown-item" href="/admin">Админка</a></li>
               </ul>
             </li>
@@ -56,5 +86,3 @@ onBeforeMount(() => {
     <router-view />
   </div>
 </template>
-
-<style></style>
