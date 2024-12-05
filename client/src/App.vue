@@ -22,11 +22,9 @@ async function logout() {
     });
     if (response.data.success) {
       userStore.resetUser();
-      window.location.reload();
-    } 
-    else {
-      console.error('Ошибка выхода, попробуйте еще раз.');
+      
     }
+    window.location.reload();
   } catch (error) {
     console.error('Ошибка выхода:', error);
   }

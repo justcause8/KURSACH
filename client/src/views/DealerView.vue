@@ -140,12 +140,12 @@ onBeforeMount(async () => {
                     <div class="col-auto d-flex align-self-center">
                         <button class="btn btn-primary">Добавить</button>
                     </div>
-                    <div class="col-auto d-flex align-self-center">
-                        <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
-                            data-bs-target="#statsModal">Статистика</button>
-                    </div>
                 </div>
             </form>
+            <div class="col-auto d-flex justify-content-end mt-2">
+                <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
+                    data-bs-target="#statsModal">Статистика</button>
+            </div>
 
             <div v-for="item in dealers" class="dealers-item">
                 <div>{{ item.name }}</div>
@@ -154,13 +154,15 @@ onBeforeMount(async () => {
                     <img :src="item.picture" style="max-height: 60px; cursor: pointer;" alt="Car image"
                         @click="onImageClick(item.picture)">
                 </div>
-                <button class="btn btn-success" @click="onDealersEditClick(item)" data-bs-toggle="modal"
-                    data-bs-target="#editDealersModal">
-                    <i class="bi bi-pencil-square"></i>
-                </button>
-                <button class="btn btn-danger" @click="onRemoveClick(item)">
-                    <i class="bi bi-x"></i>
-                </button>
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-success me-1" @click="onDealersEditClick(item)" data-bs-toggle="modal"
+                        data-bs-target="#editDealersModal">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn btn-danger" @click="onRemoveClick(item)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
             </div>
         </div>
 

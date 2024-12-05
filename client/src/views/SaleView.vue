@@ -112,12 +112,12 @@ onBeforeMount(async () => {
                     <div class="col-auto d-flex align-self-center">
                         <button class="btn btn-primary">Добавить</button>
                     </div>
-                    <div class="col-auto d-flex align-self-center">
-                        <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
-                            data-bs-target="#statsModal">Статистика</button>
-                    </div>
                 </div>
             </form>
+            <div class="col-auto d-flex justify-content-end mt-2">
+                <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
+                    data-bs-target="#statsModal">Статистика</button>
+            </div>
 
             <div>
                 <div v-for="item in sales" :key="item.id" class="sales-item">
@@ -125,13 +125,15 @@ onBeforeMount(async () => {
                     <div>{{ item.customer_FK.name }}</div>
                     <div>{{ item.sale_data }}</div>
                     <div>{{ item.sale_price }}</div>
-                    <button class="btn btn-success" @click="onSalesEditClick(item)" data-bs-toggle="modal"
-                        data-bs-target="#editSalesModal">
-                        <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button class="btn btn-danger" @click="onRemoveClick(item)">
-                        <i class="bi bi-x"></i>
-                    </button>
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-success me-1" @click="onSalesEditClick(item)" data-bs-toggle="modal"
+                            data-bs-target="#editSalesModal">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-danger" @click="onRemoveClick(item)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

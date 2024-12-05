@@ -102,108 +102,112 @@ onBeforeMount(async () => {
           <div class="col-auto d-flex align-self-center">
             <button class="btn btn-primary">Добавить</button>
           </div>
-          <div class="col-auto d-flex align-self-center">
-            <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
-              data-bs-target="#statsModal">Статистика</button>
-          </div>
         </div>
       </form>
+      <div class="col-auto d-flex justify-content-end mt-2">
+        <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
+          data-bs-target="#statsModal">Статистика</button>
+      </div>
       <div>
         <div v-for='item in dealer_centers' class="dealercenters-item">
           <div>{{ item.headquarters_location }}</div>
           <div>{{ item.contact }}</div>
           <div>{{ item.manager }}</div>
           <div>{{ item.dealer_FK.name }}</div>
-          <button class="btn btn-success" @click="onDealerCentersEditClick(item)" data-bs-toggle="modal"
-            data-bs-target="#editDealerCenterModal">
-            <i class="bi bi-pencil-square"></i>
-          </button>
-          <button class="btn btn-danger" @click="onRemoveClick(item)">
-            <i class="bi bi-x"></i>
-          </button>
+
+          <div class="d-flex justify-content-end">
+            <button class="btn btn-success me-1" @click="onDealerCentersEditClick(item)" data-bs-toggle="modal"
+              data-bs-target="#editDealerCenterModal">
+              <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-danger" @click="onRemoveClick(item)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="modal fade" id="editDealerCenterModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="exampleModalLabel">Редактировать</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row">
-            <div class="col-auto">
-              <div class="form-floating">
-                <input type="text" class="form-control" v-model="dealercenterToEdit.headquarters_location">
-                <label for="floatingInput">Location</label>
+    <div class="modal fade" id="editDealerCenterModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Редактировать</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-auto">
+                <div class="form-floating">
+                  <input type="text" class="form-control" v-model="dealercenterToEdit.headquarters_location">
+                  <label for="floatingInput">Location</label>
+                </div>
               </div>
-            </div>
-            <div class="col-auto">
-              <div class="form-floating">
-                <input type="text" class="form-control" v-model="dealercenterToEdit.contact">
-                <label for="floatingInput">Contact</label>
+              <div class="col-auto">
+                <div class="form-floating">
+                  <input type="text" class="form-control" v-model="dealercenterToEdit.contact">
+                  <label for="floatingInput">Contact</label>
+                </div>
               </div>
-            </div>
-            <div class="col-auto">
-              <div class="form-floating">
-                <input type="text" class="form-control" v-model="dealercenterToEdit.manager">
-                <label for="floatingInput">Manager</label>
+              <div class="col-auto">
+                <div class="form-floating">
+                  <input type="text" class="form-control" v-model="dealercenterToEdit.manager">
+                  <label for="floatingInput">Manager</label>
+                </div>
               </div>
-            </div>
-            <div class="col-auto">
-              <div class="form-floating">
-                <select class="form-select" v-model="dealercenterToEdit.dealer_FK_id">
-                  <option :value="d.id" v-for="d in dealers">{{ d.name }}</option>
-                </select>
-                <label for="floatingInput">Dealer</label>
+              <div class="col-auto">
+                <div class="form-floating">
+                  <select class="form-select" v-model="dealercenterToEdit.dealer_FK_id">
+                    <option :value="d.id" v-for="d in dealers">{{ d.name }}</option>
+                  </select>
+                  <label for="floatingInput">Dealer</label>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
-            @click="onDealerCenterUpdateClick">Сохранить</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" ref="confirmDeleteModalRef" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Подтверждение удаления</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          Вы уверены, что хотите удалить "{{ dealerCenterToDelete?.headquarters_location }}"?
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-          <button type="button" class="btn btn-danger" @click="onConfirmDelete" data-bs-dismiss="modal">Удалить</button>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+              @click="onDealerCenterUpdateClick">Сохранить</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Модальное окно для статистики -->
-  <div class="modal fade" id="statsModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Статистика Дилерских центров</h5>
+    <div class="modal fade" ref="confirmDeleteModalRef" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Подтверждение удаления</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Вы уверены, что хотите удалить "{{ dealerCenterToDelete?.headquarters_location }}"?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="button" class="btn btn-danger" @click="onConfirmDelete"
+              data-bs-dismiss="modal">Удалить</button>
+          </div>
         </div>
-        <div class="modal-body">
-          <p>Количество Дилерских центров: {{ stats.count }}</p>
-          <p>Максимальный ID Дилерского центра: {{ stats.max }}</p>
-          <p>Минимальный ID Дилерского центра: {{ stats.min }}</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+
+    <!-- Модальное окно для статистики -->
+    <div class="modal fade" id="statsModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Статистика Дилерских центров</h5>
+          </div>
+          <div class="modal-body">
+            <p>Количество Дилерских центров: {{ stats.count }}</p>
+            <p>Максимальный ID Дилерского центра: {{ stats.max }}</p>
+            <p>Минимальный ID Дилерского центра: {{ stats.min }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+          </div>
         </div>
       </div>
     </div>

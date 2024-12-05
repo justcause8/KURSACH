@@ -141,6 +141,26 @@ onBeforeMount(async () => {
     await fetchDealerCenters();
     await fetchStats();
 });
+
+async function exportToExcel() {
+    const response = await axios.get("/api/cars/export-excel/", { responseType: "blob" });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "cars.xlsx");
+    document.body.appendChild(link);
+    link.click();
+}
+
+async function exportToWord() {
+    const response = await axios.get("/api/cars/export-word/", { responseType: "blob" });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "cars.docx");
+    document.body.appendChild(link);
+    link.click();
+}
 </script>
 
 <template>
@@ -192,12 +212,22 @@ onBeforeMount(async () => {
                     <div class="col-auto d-flex align-self-center">
                         <button class="btn btn-primary">Добавить</button>
                     </div>
-                    <div class="col-auto d-flex align-self-center">
-                        <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
-                            data-bs-target="#statsModal">Статистика</button>
-                    </div>
                 </div>
             </form>
+            <div class="col-auto d-flex justify-content-end mt-2">
+                <button class="btn btn-success me-2" @click="exportToExcel">
+                    Сохранить в Excel
+                </button>
+
+                <button class="btn btn-success me-2" @click="exportToWord">
+                    Сохранить в Word
+                </button>
+
+                <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
+                    data-bs-target="#statsModal">
+                    Статистика
+                </button>
+            </div>
 
             <div v-for='item in cars' class="cars-item">
                 <div>{{ item.dealer_FK.name }}</div>
@@ -209,13 +239,15 @@ onBeforeMount(async () => {
                     <img :src="item.picture" style="max-height: 60px; cursor: pointer;" alt="Car image"
                         @click="onImageClick(item.picture)">
                 </div>
-                <button class="btn btn-success" @click="onCarsEditClick(item)" data-bs-toggle="modal"
-                    data-bs-target="#editCarsModal">
-                    <i class="bi bi-pencil-square"></i>
-                </button>
-                <button class="btn btn-danger" @click="onRemoveClick(item)">
-                    <i class="bi bi-x"></i>
-                </button>
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-success  me-1" @click="onCarsEditClick(item)" data-bs-toggle="modal"
+                        data-bs-target="#editCarsModal">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn btn-danger" @click="onRemoveClick(item)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -339,7 +371,7 @@ onBeforeMount(async () => {
     box-shadow: 0 0 4px silver;
     border-radius: 8px;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr auto auto auto;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr auto auto;
     align-content: center;
     align-items: center;
     gap: 16px;
