@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onBeforeMount } from 'vue';
+import { ref, computed, onBeforeMount } from 'vue';
 import axios from 'axios';
 import { Modal } from 'bootstrap'
 
@@ -13,6 +13,12 @@ const dealersToEdit = ref({
     headquarters_location: '',
     picture: '',
 });
+
+const filters = ref({
+    name: "",
+    headquarters_location: ""
+});
+
 const dealersPictureRef = ref('');
 const dealersPictureRefEdit = ref('');
 const dealersAddImageUrl = ref('');
@@ -106,6 +112,23 @@ async function fetchStats() {
     stats.value = r.data;
 }
 
+// Фильтровать дилеров по введённым значениям
+const filteredDealers = computed(() => {
+    return dealers.value.filter(dealer => {
+        const nameMatch = !filters.value.name || dealer.name.trim().toLowerCase().includes(filters.value.name.trim().toLowerCase());
+        const locationMatch = !filters.value.headquarters_location || dealer.headquarters_location.trim().toLowerCase().includes(filters.value.headquarters_location.trim().toLowerCase());
+
+        return nameMatch && locationMatch;
+    });
+});
+
+function resetFilters() {
+    filters.value = {
+        name: "",
+        headquarters_location: ""
+    };
+}
+
 onBeforeMount(async () => {
     await fetchDealers();
     await fetchStats();
@@ -147,22 +170,41 @@ onBeforeMount(async () => {
                     data-bs-target="#statsModal">Статистика</button>
             </div>
 
-            <div v-for="item in dealers" class="dealers-item">
-                <div>{{ item.name }}</div>
-                <div>{{ item.headquarters_location }}</div>
-                <div v-if="item.picture">
-                    <img :src="item.picture" style="max-height: 60px; cursor: pointer;" alt="Car image"
-                        @click="onImageClick(item.picture)">
+            <div class="row mb-3 mt-3">
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Name" v-model="filters.name">
                 </div>
-                <div class="d-flex justify-content-end">
-                    <button class="btn btn-success me-1" @click="onDealersEditClick(item)" data-bs-toggle="modal"
-                        data-bs-target="#editDealersModal">
-                        <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button class="btn btn-danger" @click="onRemoveClick(item)">
-                        <i class="bi bi-trash"></i>
-                    </button>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Location"
+                        v-model="filters.headquarters_location">
                 </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" @click="resetFilters">Сбросить</button>
+                </div>
+            </div>
+
+            <div v-if="filteredDealers.length > 0">
+                <div v-for="item in filteredDealers" class="dealers-item">
+                    <div>{{ item.name }}</div>
+                    <div>{{ item.headquarters_location }}</div>
+                    <div v-if="item.picture">
+                        <img :src="item.picture" style="max-height: 60px; cursor: pointer;" alt="Car image"
+                            @click="onImageClick(item.picture)">
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-success me-1" @click="onDealersEditClick(item)" data-bs-toggle="modal"
+                            data-bs-target="#editDealersModal">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-danger" @click="onRemoveClick(item)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="text-center mt-4">
+                <img src="D:\ПОЛИТЕХ\3 курс\web-программирование\KURSACH\media\other\huh-pulp.gif" alt="Huh Pulp GIF"
+                    style="max-width: 100px; height: auto;">
             </div>
         </div>
 

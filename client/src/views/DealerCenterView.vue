@@ -1,16 +1,23 @@
 <script setup>
-import { ref, onBeforeMount } from 'vue';
+import { ref, computed, onBeforeMount } from 'vue';
 import axios from 'axios';
 import _ from 'lodash';
 import { Modal } from 'bootstrap'
 
-const dealer_centers = ref({});
+const dealer_centers = ref([]);
 const dealers = ref({});
 const dealercenterToAdd = ref({});
 const dealercenterToEdit = ref({});
 const confirmDeleteModalRef = ref();
 const dealerCenterToDelete = ref(null);
 const stats = ref({});
+
+const filters = ref({
+  headquarters_location: "",
+  contact: "",
+  manager: "",
+  dealer_FK: ""
+});
 
 function onRemoveClick(dealercenter) {
   dealerCenterToDelete.value = dealercenter;
@@ -61,6 +68,27 @@ async function fetchStats() {
   stats.value = r.data;
 }
 
+// Фильтровать дилерских центров по введённым значениям
+const filteredDealerCenters = computed(() => {
+  return dealer_centers.value.filter(dealer => {
+    const locationMatch = !filters.value.headquarters_location || dealer.headquarters_location.toLowerCase().includes(filters.value.headquarters_location.toLowerCase());
+    const contactMatch = !filters.value.contact || dealer.contact.toLowerCase().includes(filters.value.contact.toLowerCase());
+    const managerMatch = !filters.value.manager || dealer.manager.toLowerCase().includes(filters.value.manager.toLowerCase());
+    const dealerMatch = !filters.value.dealer_FK || dealer.dealer_FK.id === filters.value.dealer_FK;
+
+    return locationMatch && contactMatch && managerMatch && dealerMatch;
+  });
+});
+
+function resetFilters() {
+  filters.value = {
+    headquarters_location: "",
+    contact: "",
+    manager: "",
+    dealer_FK: ""
+  };
+}
+
 onBeforeMount(async () => {
   await fetchDealerCenters();
   await fetchDealers();
@@ -108,8 +136,32 @@ onBeforeMount(async () => {
         <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
           data-bs-target="#statsModal">Статистика</button>
       </div>
-      <div>
-        <div v-for='item in dealer_centers' class="dealercenters-item">
+
+      <div class="row mb-3 mt-3">
+        <div class="col">
+          <input type="text" class="form-control" placeholder="Location" v-model="filters.headquarters_location">
+        </div>
+        <div class="col">
+          <input type="text" class="form-control" placeholder="Contact" v-model="filters.contact">
+        </div>
+        <div class="col">
+          <input type="text" class="form-control" placeholder="Manager" v-model="filters.manager">
+        </div>
+        <div class="col">
+          <select class="form-select" v-model="filters.dealer_FK">
+            <option value="">Dealers</option>
+            <option v-for="dealer in dealers" :key="dealer.id" :value="dealer.id">
+              {{ dealer.name }}
+            </option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-primary" @click="resetFilters">Сбросить</button>
+        </div>
+      </div>
+
+      <div v-if="filteredDealerCenters.length > 0">
+        <div v-for='item in filteredDealerCenters' class="dealercenters-item">
           <div>{{ item.headquarters_location }}</div>
           <div>{{ item.contact }}</div>
           <div>{{ item.manager }}</div>
@@ -125,6 +177,10 @@ onBeforeMount(async () => {
             </button>
           </div>
         </div>
+      </div>
+      <div v-else class="text-center mt-4">
+        <img src="D:\ПОЛИТЕХ\3 курс\web-программирование\KURSACH\media\other\huh-pulp.gif" alt="Huh Pulp GIF"
+          style="max-width: 100px; height: auto;">
       </div>
     </div>
 

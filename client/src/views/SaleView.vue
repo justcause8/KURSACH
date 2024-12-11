@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onBeforeMount } from 'vue';
+import { ref, computed, onBeforeMount } from 'vue';
 import axios from 'axios';
 import _ from 'lodash';
 import { Modal } from 'bootstrap'
@@ -12,6 +12,13 @@ const salesToEdit = ref({});
 const confirmDeleteModalRef = ref();
 const saleToDelete = ref(null);
 const stats = ref({});
+
+const filters = ref({
+    car_model: "",
+    customer: "",
+    sale_data: "",
+    sale_price: ""
+});
 
 function onRemoveClick(sale) {
     saleToDelete.value = sale;
@@ -64,6 +71,26 @@ async function onSalesUpdateClick() {
 async function fetchStats() {
     const r = await axios.get("/api/sales/stats/");
     stats.value = r.data;
+}
+
+// Фильтровать продажи по введённым значениям
+const filteredSales = computed(() => {
+    return sales.value.filter(sale => {
+        const carModelMatch = !filters.value.car_model || sale.car_FK.car_model.trim().toLowerCase().includes(filters.value.car_model.trim().toLowerCase());
+        const customerMatch = !filters.value.customer || sale.customer_FK.name.trim().toLowerCase().includes(filters.value.customer.trim().toLowerCase());
+        const saleDataMatch = !filters.value.sale_data || sale.sale_data.trim().toLowerCase().includes(filters.value.sale_data.trim().toLowerCase());
+        const salePriceMatch = !filters.value.sale_price || sale.sale_price.toString().includes(filters.value.sale_price);
+        return carModelMatch && customerMatch && saleDataMatch && salePriceMatch;
+    });
+});
+
+function resetFilters() {
+    filters.value = {
+        car_model: "",
+        customer: "",
+        sale_data: "",
+        sale_price: ""
+    };
 }
 
 onBeforeMount(async () => {
@@ -119,8 +146,36 @@ onBeforeMount(async () => {
                     data-bs-target="#statsModal">Статистика</button>
             </div>
 
-            <div>
-                <div v-for="item in sales" :key="item.id" class="sales-item">
+            <div class="row mb-3 mt-3">
+                <div class="col">
+                    <select class="form-select" v-model="filters.car_model">
+                        <option value="">Car model</option>
+                        <option v-for="car in cars" :key="car.id" :value="car.car_model">
+                            {{ car.car_model }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col">
+                    <select class="form-select" v-model="filters.customer">
+                        <option value="">Customer</option>
+                        <option v-for="customer in customers" :key="customer.id" :value="customer.name">
+                            {{ customer.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Sale data" v-model="filters.sale_data">
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Sale Price" v-model="filters.sale_price">
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" @click="resetFilters">Сбросить</button>
+                </div>
+            </div>
+
+            <div v-if="filteredSales.length > 0">
+                <div v-for="item in filteredSales" :key="item.id" class="sales-item">
                     <div>{{ item.car_FK.car_model }}</div>
                     <div>{{ item.customer_FK.name }}</div>
                     <div>{{ item.sale_data }}</div>
@@ -135,6 +190,10 @@ onBeforeMount(async () => {
                         </button>
                     </div>
                 </div>
+            </div>
+            <div v-else class="text-center mt-4">
+                <img src="D:\ПОЛИТЕХ\3 курс\web-программирование\KURSACH\media\other\huh-pulp.gif" alt="Huh Pulp GIF"
+                    style="max-width: 100px; height: auto;">
             </div>
         </div>
     </div>

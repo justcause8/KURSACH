@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onBeforeMount } from 'vue';
+import { ref, computed, onBeforeMount } from 'vue';
 import axios from 'axios';
 import { Modal } from 'bootstrap'
 
@@ -10,6 +10,12 @@ const customersToEdit = ref({});
 const confirmDeleteModalRef = ref();
 const customerToDelete = ref(null);
 const stats = ref({});
+
+const filters = ref({
+    car_model: "",
+    name: "",
+    contact_info: ""
+});
 
 function onRemoveClick(customer) {
     customerToDelete.value = customer;
@@ -58,6 +64,26 @@ async function fetchStats() {
     stats.value = r.data;
 }
 
+
+// Фильтровать покупателей по введённым значениям
+const filteredCustomers = computed(() => {
+    return customers.value.filter(customer => {
+        const carModelMatch = !filters.value.car_model || (customer.car_FK?.car_model || "").toLowerCase().includes(filters.value.car_model.toLowerCase());
+        const nameMatch = !filters.value.name || customer.name.toLowerCase().includes(filters.value.name.toLowerCase());
+        const contactInfoMatch = !filters.value.contact_info || customer.contact_info.toLowerCase().includes(filters.value.contact_info.toLowerCase());
+
+        return carModelMatch && nameMatch && contactInfoMatch;
+    });
+});
+
+function resetFilters() {
+    filters.value = {
+        car_model: "",
+        name: "",
+        contact_info: ""
+    };
+}
+
 onBeforeMount(async () => {
     await fetchCars();
     await fetchCustomers();
@@ -72,8 +98,8 @@ onBeforeMount(async () => {
                 <div class="row">
                     <div class="col">
                         <div class="form-floating">
-                            <select class="form-select" v-model="customersToAdd.car_FK_id" required>
-                                <option :value="c.id" v-for="c in cars" :key="c.id">{{ c.car_model }}</option>
+                            <select class="form-select" v-model="customersToAdd.car_FK" required>
+                                <option :value="c.id" v-for="c in cars" :key="c.id">{{ c.car_FK }}</option>
                             </select>
                             <label for="floatingInput">Car Model</label>
                         </div>
@@ -99,8 +125,29 @@ onBeforeMount(async () => {
                 <button class="btn btn-success" @click="fetchStats()" data-bs-toggle="modal"
                     data-bs-target="#statsModal">Статистика</button>
             </div>
-            <div>
-                <div v-for="customer in customers" :key="customer.id" class="customers-item">
+
+            <div class="row mb-3 mt-3">
+                <div class="col">
+                    <select class="form-select" v-model="filters.car_model">
+                        <option value="">Car model</option>
+                        <option v-for="car in cars" :key="car.id" :value="car.car_model">
+                            {{ car.car_model }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Name" v-model="filters.name">
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Contact info" v-model="filters.contact_info">
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" @click="resetFilters">Сбросить</button>
+                </div>
+            </div>
+
+            <div v-if="filteredCustomers.length > 0">
+                <div v-for="customer in filteredCustomers" :key="customer.id" class="customers-item">
                     <div>{{ customer.car_FK.car_model }}</div>
                     <div>{{ customer.name }}</div>
                     <div>{{ customer.contact_info }}</div>
@@ -115,6 +162,10 @@ onBeforeMount(async () => {
                         </button>
                     </div>
                 </div>
+            </div>
+            <div v-else class="text-center mt-4">
+                <img src="D:\ПОЛИТЕХ\3 курс\web-программирование\KURSACH\media\other\huh-pulp.gif" alt="Huh Pulp GIF"
+                    style="max-width: 100px; height: auto;">
             </div>
         </div>
     </div>

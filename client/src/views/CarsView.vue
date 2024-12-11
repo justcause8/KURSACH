@@ -13,6 +13,14 @@ const carsToAdd = ref({
     year: '',
     price: ''
 });
+const filters = ref({
+    dealer_FK: "",
+    dealer_center_FK: "",
+    car_model: "",
+    year: "",
+    price: ""
+});
+
 const carsToEdit = ref({});
 const carPictureRef = ref('');
 const carPictureRefEdit = ref('');
@@ -135,6 +143,30 @@ async function fetchStats() {
     const r = await axios.get("/api/cars/stats/");
     stats.value = r.data;
 }
+
+// Фильтровать автомобили по введённым значениям
+const filteredCars = computed(() => {
+    return cars.value.filter(car => {
+        const dealerMatch = !filters.value.dealer_FK || car.dealer_FK.id.toString().includes(filters.value.dealer_FK);
+        const modelMatch = !filters.value.car_model || car.car_model.toLowerCase().includes(filters.value.car_model.toLowerCase());
+        const yearMatch = !filters.value.year || car.year.toString().includes(filters.value.year);
+        const priceMatch = !filters.value.price || car.price.toString().includes(filters.value.price);
+        const centerMatch = !filters.value.dealer_center_FK || car.dealer_center_FK.id.toString().includes(filters.value.dealer_center_FK);
+
+        return dealerMatch && modelMatch && yearMatch && priceMatch && centerMatch;
+    });
+});
+
+function resetFilters() {
+    filters.value = {
+        dealer_FK: "",
+        dealer_center_FK: "",
+        car_model: "",
+        year: "",
+        price: ""
+    };
+}
+
 onBeforeMount(async () => {
     await fetchCars();
     await fetchDealers();
@@ -229,25 +261,60 @@ async function exportToWord() {
                 </button>
             </div>
 
-            <div v-for='item in cars' class="cars-item">
-                <div>{{ item.dealer_FK.name }}</div>
-                <div>{{ item.car_model }}</div>
-                <div>{{ item.year }}</div>
-                <div>{{ item.price }}</div>
-                <div>{{ item.dealer_center_FK.headquarters_location }}</div>
-                <div v-if="item.picture">
-                    <img :src="item.picture" style="max-height: 60px; cursor: pointer;" alt="Car image"
-                        @click="onImageClick(item.picture)">
+            <div class="row mb-3 mt-3">
+                <div class="col">
+                    <select class="form-select" v-model="filters.dealer_FK">
+                        <option value="">Dealers</option>
+                        <option :value="d.id" v-for="d in dealers" :key="d.id">{{ d.name }}</option>
+                    </select>
                 </div>
-                <div class="d-flex justify-content-end">
-                    <button class="btn btn-success  me-1" @click="onCarsEditClick(item)" data-bs-toggle="modal"
-                        data-bs-target="#editCarsModal">
-                        <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button class="btn btn-danger" @click="onRemoveClick(item)">
-                        <i class="bi bi-trash"></i>
-                    </button>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Model" v-model="filters.car_model">
                 </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Year" v-model="filters.year">
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" placeholder="Price" v-model="filters.price">
+                </div>
+                <div class="col">
+                    <select class="form-select" v-model="filters.dealer_center_FK">
+                        <option value="">Dealer centers</option>
+                        <option v-for="c in dealer_centers" :key="c.id" :value="c.id">
+                            {{ c.headquarters_location }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" @click="resetFilters">Сбросить</button>
+                </div>
+            </div>
+
+            <div v-if="filteredCars.length > 0">
+                <div v-for='item in filteredCars' class="cars-item">
+                    <div>{{ item.dealer_FK.name }}</div>
+                    <div>{{ item.car_model }}</div>
+                    <div>{{ item.year }}</div>
+                    <div>{{ item.price }}</div>
+                    <div>{{ item.dealer_center_FK.headquarters_location }}</div>
+                    <div v-if="item.picture">
+                        <img :src="item.picture" style="max-height: 60px; cursor: pointer;" alt="Car image"
+                            @click="onImageClick(item.picture)">
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-success  me-1" @click="onCarsEditClick(item)" data-bs-toggle="modal"
+                            data-bs-target="#editCarsModal">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-danger" @click="onRemoveClick(item)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div v-else class="text-center mt-4">
+                <img src="D:\ПОЛИТЕХ\3 курс\web-программирование\KURSACH\media\other\huh-pulp.gif" alt="Huh Pulp GIF"
+                    style="max-width: 100px; height: auto;">
             </div>
         </div>
     </div>
