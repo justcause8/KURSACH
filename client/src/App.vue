@@ -43,19 +43,18 @@ async function logout() {
         <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
           <ul class="navbar-nav">
             <li class="nav-item">
-              <router-link class="nav-link" to="/dealer-centers">Dealer-centers</router-link>
+              <router-link class="nav-link" to="/dealers">Dealers</router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" to="/dealers">Dealers</router-link>
+              <router-link class="nav-link" to="/dealer-centers">Dealer-centers</router-link>
             </li>
             <li class="nav-item">
               <router-link class="nav-link" to="/cars">Cars</router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" to="/sales">Sales</router-link>
-            </li>
-            <li class="nav-item">
               <router-link class="nav-link" to="/customers">Customers</router-link>
+            </li><li class="nav-item">
+              <router-link class="nav-link" to="/sales">Sales</router-link>
             </li>
           </ul>
 

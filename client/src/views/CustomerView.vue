@@ -95,11 +95,12 @@ onBeforeMount(async () => {
     <div class="container-fluid">
         <div class="p-2">
             <form @submit.prevent="onCustomersAdd">
+                <h4>Ввод данных</h4>
                 <div class="row">
                     <div class="col">
                         <div class="form-floating">
-                            <select class="form-select" v-model="customersToAdd.car_FK" required>
-                                <option :value="c.id" v-for="c in cars" :key="c.id">{{ c.car_FK }}</option>
+                            <select class="form-select" v-model="customersToAdd.car_FK_id" required>
+                                <option :value="c.id" v-for="c in cars" :key="c.id">{{ c.car_model }}</option>
                             </select>
                             <label for="floatingInput">Car Model</label>
                         </div>
@@ -126,6 +127,7 @@ onBeforeMount(async () => {
                     data-bs-target="#statsModal">Статистика</button>
             </div>
 
+            <h4>Фильтрация</h4>
             <div class="row mb-3 mt-3">
                 <div class="col">
                     <select class="form-select" v-model="filters.car_model">

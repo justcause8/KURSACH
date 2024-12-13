@@ -34,6 +34,9 @@ export default defineConfig({
       '/media': {
         target: "http://localhost:8000"
       },
+      '/info': {
+        target: "http://localhost:8000"
+      },
     }
   }
 })

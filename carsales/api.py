@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Count, Avg, Max, Min
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
 from carsales.serializers import (
     DealerSerializer, DealerCenterSerializer,
@@ -22,8 +23,6 @@ from rest_framework import status
 from io import BytesIO
 from openpyxl import Workbook
 from docx import Document
-
-
 
 # Базовый ViewSet для создания фильтрации по пользователю
 class BaseUserViewSet(
@@ -242,9 +241,18 @@ class UserViewSet(GenericViewSet):
         if request.user.is_authenticated:
             data.update({
                 "username": request.user.username,
-                "user_id": request.user.id
+                "user_id": request.user.id,
+                "is_superuser": request.user.is_superuser
             })
         return Response(data)
+
+    @action(detail=False, methods=["GET"], url_path="list-users")
+    def list_users(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return Response({"detail": "Permission denied."}, status=403)
+        
+        users = User.objects.values("id", "username")
+        return Response(users)
 
     @action(url_path="login", methods=["POST"], detail=False)
     def login(self, request, *args, **kwargs):

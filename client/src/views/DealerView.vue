@@ -139,6 +139,7 @@ onBeforeMount(async () => {
     <div class="container-fluid">
         <div class="p-2">
             <form @submit.prevent="onDealersAdd">
+                <h4>Ввод данных</h4>
                 <div class="row">
                     <div class="col">
                         <div class="form-floating">
@@ -170,6 +171,7 @@ onBeforeMount(async () => {
                     data-bs-target="#statsModal">Статистика</button>
             </div>
 
+            <h4>Фильтрация</h4>
             <div class="row mb-3 mt-3">
                 <div class="col">
                     <input type="text" class="form-control" placeholder="Name" v-model="filters.name">

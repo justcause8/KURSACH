@@ -199,6 +199,7 @@ async function exportToWord() {
     <div class="container-fluid">
         <div class="p-2">
             <form @submit.prevent="onCarsAdd">
+                <h4>Ввод данных</h4>
                 <div class="row">
                     <div class="col">
                         <div class="form-floating">
@@ -261,6 +262,7 @@ async function exportToWord() {
                 </button>
             </div>
 
+            <h4>Фильтрация</h4>
             <div class="row mb-3 mt-3">
                 <div class="col">
                     <select class="form-select" v-model="filters.dealer_FK">

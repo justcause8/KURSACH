@@ -1,8 +1,10 @@
 <script setup>
 import { ref, computed, onBeforeMount } from 'vue';
+import { storeToRefs } from 'pinia';
 import axios from 'axios';
 import _ from 'lodash';
 import { Modal } from 'bootstrap'
+import useUserStore from '../stores/userStore';
 
 const dealer_centers = ref([]);
 const dealers = ref({});
@@ -11,12 +13,15 @@ const dealercenterToEdit = ref({});
 const confirmDeleteModalRef = ref();
 const dealerCenterToDelete = ref(null);
 const stats = ref({});
+const userStore = useUserStore();
+const { isSuperuser, users } = storeToRefs(userStore);
 
 const filters = ref({
   headquarters_location: "",
   contact: "",
   manager: "",
-  dealer_FK: ""
+  dealer_FK: "",
+  user_id: ""
 });
 
 function onRemoveClick(dealercenter) {
@@ -34,6 +39,7 @@ async function onConfirmDelete() {
 
 async function fetchDealerCenters() {
   const r = await axios.get("/api/dealer-centers/")
+  debugLog('Dealer Centers', dealer_centers.value);
   dealer_centers.value = r.data;
 }
 
@@ -68,16 +74,19 @@ async function fetchStats() {
   stats.value = r.data;
 }
 
-// Фильтровать дилерских центров по введённым значениям
+// Фильтрация дилерских центров по введённым значениям
 const filteredDealerCenters = computed(() => {
-  return dealer_centers.value.filter(dealer => {
+  const filtered = dealer_centers.value.filter(dealer => {
     const locationMatch = !filters.value.headquarters_location || dealer.headquarters_location.toLowerCase().includes(filters.value.headquarters_location.toLowerCase());
     const contactMatch = !filters.value.contact || dealer.contact.toLowerCase().includes(filters.value.contact.toLowerCase());
     const managerMatch = !filters.value.manager || dealer.manager.toLowerCase().includes(filters.value.manager.toLowerCase());
     const dealerMatch = !filters.value.dealer_FK || dealer.dealer_FK.id === filters.value.dealer_FK;
+    const userMatch = !filters.value.user_id || dealer.user === filters.value.user_id;
 
-    return locationMatch && contactMatch && managerMatch && dealerMatch;
+    return locationMatch && contactMatch && managerMatch && dealerMatch && userMatch;
   });
+
+  return filtered;
 });
 
 function resetFilters() {
@@ -85,21 +94,27 @@ function resetFilters() {
     headquarters_location: "",
     contact: "",
     manager: "",
-    dealer_FK: ""
+    dealer_FK: "",
+    user_id: ""
   };
 }
 
 onBeforeMount(async () => {
+  await userStore.fetchUser();
+  if (isSuperuser.value) {
+    await userStore.fetchUsers();
+  }
   await fetchDealerCenters();
   await fetchDealers();
   await fetchStats();
-})
+});
 
 </script>
 <template>
   <div class="container-fluid">
     <div class="p-2">
       <form @submit.prevent.stop="onDealerCentersAdd">
+        <h4>Ввод данных</h4>
         <div class="row">
           <div class="col">
             <div class="form-floating">
@@ -137,6 +152,7 @@ onBeforeMount(async () => {
           data-bs-target="#statsModal">Статистика</button>
       </div>
 
+      <h4>Фильтрация</h4>
       <div class="row mb-3 mt-3">
         <div class="col">
           <input type="text" class="form-control" placeholder="Location" v-model="filters.headquarters_location">
@@ -152,6 +168,14 @@ onBeforeMount(async () => {
             <option value="">Dealers</option>
             <option v-for="dealer in dealers" :key="dealer.id" :value="dealer.id">
               {{ dealer.name }}
+            </option>
+          </select>
+        </div>
+        <div class="col">
+          <select class="form-select" v-model="filters.user_id">
+            <option value="">Users</option>
+            <option v-for="user in users" :key="user.id" :value="user.id">
+              {{ user.username }}
             </option>
           </select>
         </div>
