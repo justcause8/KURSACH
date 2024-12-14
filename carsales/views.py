@@ -11,4 +11,5 @@ class ShowCarsalesView(TemplateView):
         context['cars'] = Car.objects.all()
         context['sales'] = Sale.objects.all()
         context['customers'] = Customer.objects.all()
+        
         return context

@@ -3,6 +3,8 @@ import { ref, computed, onBeforeMount } from 'vue';
 import axios from 'axios';
 import _ from 'lodash';
 import { Modal } from 'bootstrap'
+import { storeToRefs } from 'pinia';
+import useUserStore from '../stores/userStore';
 
 const sales = ref([]);
 const cars = ref([]);
@@ -12,12 +14,15 @@ const salesToEdit = ref({});
 const confirmDeleteModalRef = ref();
 const saleToDelete = ref(null);
 const stats = ref({});
+const userStore = useUserStore();
+const { isSuperuser, users } = storeToRefs(userStore);
 
 const filters = ref({
     car_model: "",
     customer: "",
     sale_data: "",
-    sale_price: ""
+    sale_price: "",
+    user_id: ""
 });
 
 function onRemoveClick(sale) {
@@ -80,7 +85,9 @@ const filteredSales = computed(() => {
         const customerMatch = !filters.value.customer || sale.customer_FK.name.trim().toLowerCase().includes(filters.value.customer.trim().toLowerCase());
         const saleDataMatch = !filters.value.sale_data || sale.sale_data.trim().toLowerCase().includes(filters.value.sale_data.trim().toLowerCase());
         const salePriceMatch = !filters.value.sale_price || sale.sale_price.toString().includes(filters.value.sale_price);
-        return carModelMatch && customerMatch && saleDataMatch && salePriceMatch;
+        const userMatch = !filters.value.user_id || sale.user === filters.value.user_id;
+
+        return carModelMatch && customerMatch && saleDataMatch && salePriceMatch && userMatch;
     });
 });
 
@@ -89,11 +96,16 @@ function resetFilters() {
         car_model: "",
         customer: "",
         sale_data: "",
-        sale_price: ""
+        sale_price: "",
+        user_id: ""
     };
 }
 
 onBeforeMount(async () => {
+    await userStore.fetchUser();
+    if (isSuperuser.value) {
+        await userStore.fetchUsers();
+    }
     await fetchCars();
     await fetchSales();
     await fetchCustomers();
@@ -106,7 +118,7 @@ onBeforeMount(async () => {
         <div class="p-2">
             <form @submit.prevent.stop="onSalesAdd">
                 <h4>Ввод данных</h4>
-                <div class="row">
+                <div class="row align-items-center g-2">
                     <div class="col">
                         <div class="form-floating">
                             <select class="form-select" v-model="salesToAdd.car_FK_id" required>
@@ -170,6 +182,14 @@ onBeforeMount(async () => {
                 </div>
                 <div class="col">
                     <input type="text" class="form-control" placeholder="Sale Price" v-model="filters.sale_price">
+                </div>
+                <div class="col">
+                    <select class="form-select" v-model="filters.user_id">
+                        <option value="">Users</option>
+                        <option v-for="user in users" :key="user.id" :value="user.id">
+                            {{ user.username }}
+                        </option>
+                    </select>
                 </div>
                 <div class="col-auto">
                     <button class="btn btn-primary" @click="resetFilters">Сбросить</button>

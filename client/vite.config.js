@@ -36,7 +36,7 @@ export default defineConfig({
       },
       '/info': {
         target: "http://localhost:8000"
-      },
+      }
     }
   }
 })

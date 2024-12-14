@@ -41,7 +41,7 @@ class CarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Car
-        fields = ['id', 'dealer_center_FK', 'dealer_FK', 'dealer_FK_id', 'car_model', 'year', 'price', 'dealer_center_FK_id', 'picture', 'user']
+        fields = ['id', 'dealer_center_FK', 'dealer_FK', 'dealer_FK_id', 'car_model', 'year', 'price', 'dealer_center_FK_id', 'picture', 'image_url', 'user']
 
 # Вложенный сериализатор для модели Customer
 class CustomerSerializer(serializers.ModelSerializer):
@@ -72,4 +72,3 @@ class SaleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sale
         fields = ['id', 'car_FK', 'customer_FK', 'sale_data', 'sale_price', 'car_FK_id', 'customer_FK_id', 'user']
-

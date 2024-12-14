@@ -34,7 +34,8 @@ class Car(models.Model):
     car_model = models.TextField("Модель")
     year = models.TextField("Год")
     price = models.TextField("Цена")
-    picture = models.ImageField("Изображение", null=True, upload_to="cars")
+    picture = models.ImageField("Изображение", null=True, blank=True)
+    image_url = models.URLField("URL изображения", null=True, blank=True)
     user = models.ForeignKey("auth.User", verbose_name="Пользователь", on_delete=models.CASCADE, null=True)
 
     class Meta:

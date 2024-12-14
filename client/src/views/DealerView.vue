@@ -2,22 +2,8 @@
 import { ref, computed, onBeforeMount } from 'vue';
 import axios from 'axios';
 import { Modal } from 'bootstrap'
-
-const dealers = ref([]);
-const dealersToAdd = ref({
-    name: '',
-    headquarters_location: '',
-});
-const dealersToEdit = ref({
-    name: '',
-    headquarters_location: '',
-    picture: '',
-});
-
-const filters = ref({
-    name: "",
-    headquarters_location: ""
-});
+import { storeToRefs } from 'pinia';
+import useUserStore from '../stores/userStore';
 
 const dealersPictureRef = ref('');
 const dealersPictureRefEdit = ref('');
@@ -27,7 +13,26 @@ const selectedImageUrl = ref();
 const imageModalRef = ref();
 const confirmDeleteModalRef = ref();
 const dealerToDelete = ref(null);
+const dealers = ref([]);
 const stats = ref({});
+const userStore = useUserStore();
+const { isSuperuser, users } = storeToRefs(userStore);
+
+const filters = ref({
+    name: "",
+    headquarters_location: "",
+    user_id: ""
+});
+
+const dealersToAdd = ref({
+    name: '',
+    headquarters_location: '',
+});
+const dealersToEdit = ref({
+    name: '',
+    headquarters_location: '',
+    picture: '',
+});
 
 function onImageClick(imageUrl) {
     selectedImageUrl.value = imageUrl;
@@ -65,7 +70,7 @@ async function onDealersAdd() {
 
     await axios.post("/api/dealers/", formData, {
         headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
         }
     });
     await fetchDealers();
@@ -117,19 +122,25 @@ const filteredDealers = computed(() => {
     return dealers.value.filter(dealer => {
         const nameMatch = !filters.value.name || dealer.name.trim().toLowerCase().includes(filters.value.name.trim().toLowerCase());
         const locationMatch = !filters.value.headquarters_location || dealer.headquarters_location.trim().toLowerCase().includes(filters.value.headquarters_location.trim().toLowerCase());
+        const userMatch = !filters.value.user_id || dealer.user === filters.value.user_id;
 
-        return nameMatch && locationMatch;
+        return nameMatch && locationMatch && userMatch;
     });
 });
 
 function resetFilters() {
     filters.value = {
         name: "",
-        headquarters_location: ""
+        headquarters_location: "",
+        user_id: ""
     };
 }
 
 onBeforeMount(async () => {
+    await userStore.fetchUser();
+    if (isSuperuser.value) {
+        await userStore.fetchUsers();
+    }
     await fetchDealers();
     await fetchStats();
 });
@@ -140,7 +151,7 @@ onBeforeMount(async () => {
         <div class="p-2">
             <form @submit.prevent="onDealersAdd">
                 <h4>Ввод данных</h4>
-                <div class="row">
+                <div class="row align-items-center g-2">
                     <div class="col">
                         <div class="form-floating">
                             <input type="text" class="form-control" v-model="dealersToAdd.name" required>
@@ -179,6 +190,14 @@ onBeforeMount(async () => {
                 <div class="col">
                     <input type="text" class="form-control" placeholder="Location"
                         v-model="filters.headquarters_location">
+                </div>   
+                <div class="col">
+                    <select class="form-select" v-model="filters.user_id">
+                        <option value="">Users</option>
+                        <option v-for="user in users" :key="user.id" :value="user.id">
+                            {{ user.username }}
+                        </option>
+                    </select>
                 </div>
                 <div class="col-auto">
                     <button class="btn btn-primary" @click="resetFilters">Сбросить</button>

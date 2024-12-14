@@ -8,25 +8,26 @@ import { storeToRefs } from 'pinia';
 const userStore = useUserStore();
 const { isAuthenticated, username, userId } = storeToRefs(userStore);
 
-onBeforeMount(() => {
-  axios.defaults.headers.common['X-CSRFToken'] = Cookies.get("csrftoken");
-})
-
 async function logout() {
   const csrfToken = Cookies.get('csrftoken');
+  if (!csrfToken) {
+    console.error('CSRF-токен отсутствует');
+    return;
+  }
+
   try {
     const response = await axios.post('/api/user/logout/', {}, {
       headers: {
         'X-CSRFToken': csrfToken
       }
     });
+
     if (response.data.success) {
       userStore.resetUser();
-      
     }
     window.location.reload();
   } catch (error) {
-    console.error('Ошибка выхода:', error);
+    console.error('Ошибка выхода:', error.response?.data || error.message);
   }
 }
 </script>
@@ -43,17 +44,18 @@ async function logout() {
         <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
           <ul class="navbar-nav">
             <li class="nav-item">
-              <router-link class="nav-link" to="/dealers">Dealers</router-link>
+              <router-link class="nav-link" to="/dealer-centers">Dealer-centers</router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" to="/dealer-centers">Dealer-centers</router-link>
+              <router-link class="nav-link" to="/dealers">Dealers</router-link>
             </li>
             <li class="nav-item">
               <router-link class="nav-link" to="/cars">Cars</router-link>
             </li>
             <li class="nav-item">
               <router-link class="nav-link" to="/customers">Customers</router-link>
-            </li><li class="nav-item">
+            </li>
+            <li class="nav-item">
               <router-link class="nav-link" to="/sales">Sales</router-link>
             </li>
           </ul>

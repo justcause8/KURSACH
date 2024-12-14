@@ -2,6 +2,8 @@
 import { ref, computed, onBeforeMount } from 'vue';
 import axios from 'axios';
 import { Modal } from 'bootstrap'
+import { storeToRefs } from 'pinia';
+import useUserStore from '../stores/userStore';
 
 const cars = ref([]);
 const customers = ref([]);
@@ -10,11 +12,14 @@ const customersToEdit = ref({});
 const confirmDeleteModalRef = ref();
 const customerToDelete = ref(null);
 const stats = ref({});
+const userStore = useUserStore();
+const { isSuperuser, users } = storeToRefs(userStore);
 
 const filters = ref({
     car_model: "",
     name: "",
-    contact_info: ""
+    contact_info: "",
+    user_id: ""
 });
 
 function onRemoveClick(customer) {
@@ -71,8 +76,9 @@ const filteredCustomers = computed(() => {
         const carModelMatch = !filters.value.car_model || (customer.car_FK?.car_model || "").toLowerCase().includes(filters.value.car_model.toLowerCase());
         const nameMatch = !filters.value.name || customer.name.toLowerCase().includes(filters.value.name.toLowerCase());
         const contactInfoMatch = !filters.value.contact_info || customer.contact_info.toLowerCase().includes(filters.value.contact_info.toLowerCase());
+        const userMatch = !filters.value.user_id || customer.user === filters.value.user_id;
 
-        return carModelMatch && nameMatch && contactInfoMatch;
+        return carModelMatch && nameMatch && contactInfoMatch && userMatch;
     });
 });
 
@@ -80,11 +86,16 @@ function resetFilters() {
     filters.value = {
         car_model: "",
         name: "",
-        contact_info: ""
+        contact_info: "",
+        user_id: ""
     };
 }
 
 onBeforeMount(async () => {
+    await userStore.fetchUser();
+    if (isSuperuser.value) {
+        await userStore.fetchUsers();
+    }
     await fetchCars();
     await fetchCustomers();
     await fetchStats();
@@ -96,7 +107,7 @@ onBeforeMount(async () => {
         <div class="p-2">
             <form @submit.prevent="onCustomersAdd">
                 <h4>Ввод данных</h4>
-                <div class="row">
+                <div class="row align-items-center g-2">
                     <div class="col">
                         <div class="form-floating">
                             <select class="form-select" v-model="customersToAdd.car_FK_id" required>
@@ -142,6 +153,14 @@ onBeforeMount(async () => {
                 </div>
                 <div class="col">
                     <input type="text" class="form-control" placeholder="Contact info" v-model="filters.contact_info">
+                </div>
+                <div class="col">
+                    <select class="form-select" v-model="filters.user_id">
+                        <option value="">Users</option>
+                        <option v-for="user in users" :key="user.id" :value="user.id">
+                            {{ user.username }}
+                        </option>
+                    </select>
                 </div>
                 <div class="col-auto">
                     <button class="btn btn-primary" @click="resetFilters">Сбросить</button>

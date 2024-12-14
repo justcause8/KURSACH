@@ -39,7 +39,6 @@ async function onConfirmDelete() {
 
 async function fetchDealerCenters() {
   const r = await axios.get("/api/dealer-centers/")
-  debugLog('Dealer Centers', dealer_centers.value);
   dealer_centers.value = r.data;
 }
 
@@ -115,7 +114,7 @@ onBeforeMount(async () => {
     <div class="p-2">
       <form @submit.prevent.stop="onDealerCentersAdd">
         <h4>Ввод данных</h4>
-        <div class="row">
+        <div class="row align-items-center g-2">
           <div class="col">
             <div class="form-floating">
               <input type="text" class="form-control" v-model="dealercenterToAdd.headquarters_location" required>

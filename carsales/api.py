@@ -7,12 +7,11 @@ from django.db.models import Count, Avg, Max, Min
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
-from carsales.serializers import (
-    DealerSerializer, DealerCenterSerializer,
-    CarSerializer, SaleSerializer, CustomerSerializer
-)
+from carsales.serializers import ( DealerSerializer, DealerCenterSerializer, CarSerializer, SaleSerializer, CustomerSerializer)
 from rest_framework import serializers
 from rest_framework.permissions import BasePermission
+from rest_framework.authentication import BasicAuthentication
+from app.middlewares import CsrfExemptSessionAuthentication
 
 import openpyxl
 from openpyxl.styles import Font
@@ -51,7 +50,7 @@ class BaseUserViewSet(
 class DealerViewSet(BaseUserViewSet):
     queryset = Dealer.objects.all()
     serializer_class = DealerSerializer
-    permission_classes = [IsAuthenticated]
+    authentication_classes =  (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     class StatsSerializer(serializers.Serializer):
         count = serializers.IntegerField()
@@ -75,6 +74,7 @@ class DealerViewSet(BaseUserViewSet):
 class DealerCenterViewSet(BaseUserViewSet):
     queryset = DealerCenter.objects.all()
     serializer_class = DealerCenterSerializer
+    authentication_classes =  (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     class StatsSerializer(serializers.Serializer):
         count = serializers.IntegerField()
@@ -98,6 +98,7 @@ class DealerCenterViewSet(BaseUserViewSet):
 class CarViewSet(BaseUserViewSet):
     queryset = Car.objects.all()
     serializer_class = CarSerializer
+    authentication_classes =  (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     class StatsSerializer(serializers.Serializer):
         count = serializers.IntegerField()
@@ -188,6 +189,7 @@ class CarViewSet(BaseUserViewSet):
 class CustomerViewSet(BaseUserViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+    authentication_classes =  (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     class StatsSerializer(serializers.Serializer):
         count = serializers.IntegerField()
@@ -211,6 +213,7 @@ class CustomerViewSet(BaseUserViewSet):
 class SaleViewSet(BaseUserViewSet):
     queryset = Sale.objects.all()
     serializer_class = SaleSerializer
+    authentication_classes =  (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     class StatsSerializer(serializers.Serializer):
         count = serializers.IntegerField()
@@ -272,7 +275,7 @@ class UserViewSet(GenericViewSet):
 
 
 class UserProfileViewSet(viewsets.GenericViewSet):
-    permission_classes = [IsAuthenticated]
+    authentication_classes =  (CsrfExemptSessionAuthentication, BasicAuthentication)
 
     class OTPSerializer(serializers.Serializer):
         key = serializers.CharField()

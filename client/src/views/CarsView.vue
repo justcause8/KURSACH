@@ -2,10 +2,15 @@
 import { ref, computed, onBeforeMount } from 'vue';
 import axios from 'axios';
 import { Modal } from 'bootstrap'
+import { storeToRefs } from 'pinia';
+import useUserStore from '../stores/userStore';
 
 const cars = ref([]);
 const dealer_centers = ref([]);
 const dealers = ref([]);
+const userStore = useUserStore();
+const { isSuperuser, users } = storeToRefs(userStore);
+
 const carsToAdd = ref({
     dealer_FK_id: null,
     dealer_center_FK_id: null,
@@ -18,19 +23,49 @@ const filters = ref({
     dealer_center_FK: "",
     car_model: "",
     year: "",
-    price: ""
+    price: "",
+    user_id: ""
 });
 
 const carsToEdit = ref({});
-const carPictureRef = ref('');
 const carPictureRefEdit = ref('');
-const carsAddImageUrl = ref('');
 const carsEditImageUrl = ref('');
 const selectedImageUrl = ref(null);
 const imageModalRef = ref();
 const confirmDeleteModalRef = ref();
 const carToDelete = ref(null);
 const stats = ref({});
+
+const carsAddImageUrl = ref('');
+const carPictureRef = ref(null);
+
+// Идентификатор вашей поисковой системы и API-ключ
+const API_KEY = 'AIzaSyCnEKygaS_aqgwv5GiCxBtQmJmu2oRWTCE';
+const CX_ID = 'c3b1fd79ca76b484c';
+
+async function searchCarImage() {
+    if (!carsToAdd.value.car_model || !carsToAdd.value.year) {
+        alert('Введите модель и год автомобиля!');
+        return;
+    }
+
+    const query = `${carsToAdd.value.car_model} ${carsToAdd.value.year} car`;
+    const url = `https://www.googleapis.com/customsearch/v1?q=${query}&cx=${CX_ID}&key=${API_KEY}&searchType=image`;
+
+    try {
+        const response = await axios.get(url);
+        const image = response.data.items[0]?.link;
+
+        if (image) {
+            carsAddImageUrl.value = image;
+        } else {
+            alert('Изображение не найдено.');
+        }
+    } catch (error) {
+        console.error('Ошибка при поиске изображения:', error);
+        alert('Не удалось выполнить поиск изображения.');
+    }
+}
 
 function onRemoveClick(car) {
     carToDelete.value = car;
@@ -75,16 +110,39 @@ async function onCarsAdd() {
     formData.append('dealer_FK_id', carsToAdd.value.dealer_FK_id);
     formData.append('dealer_center_FK_id', carsToAdd.value.dealer_center_FK_id);
 
-    if (carPictureRef.value && carPictureRef.value.files.length > 0) {
+    // Добавляем изображение
+    if (carsAddImageUrl.value) {
+        // Если есть ссылка на изображение из поиска
+        formData.append('image_url', carsAddImageUrl.value);
+    } else if (carPictureRef.value && carPictureRef.value.files.length > 0) {
+        // Если пользователь загрузил файл
         formData.append('picture', carPictureRef.value.files[0]);
     }
 
-    await axios.post("/api/cars/", formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data'
+    try {
+        await axios.post("/api/cars/", formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+
+        await fetchCars();
+
+        // Очищаем поля после добавления
+        carsToAdd.value = {
+            car_model: '',
+            year: '',
+            price: '',
+            dealer_FK_id: '',
+            dealer_center_FK_id: ''
+        };
+        carsAddImageUrl.value = '';
+        if (carPictureRef.value) {
+            carPictureRef.value.value = '';
         }
-    });
-    await fetchCars();
+    } catch (error) {
+        console.error('Ошибка при добавлении машины:', error);
+    }
 }
 
 async function onCarsEditClick(car) {
@@ -152,8 +210,9 @@ const filteredCars = computed(() => {
         const yearMatch = !filters.value.year || car.year.toString().includes(filters.value.year);
         const priceMatch = !filters.value.price || car.price.toString().includes(filters.value.price);
         const centerMatch = !filters.value.dealer_center_FK || car.dealer_center_FK.id.toString().includes(filters.value.dealer_center_FK);
+        const userMatch = !filters.value.user_id || car.user === filters.value.user_id;
 
-        return dealerMatch && modelMatch && yearMatch && priceMatch && centerMatch;
+        return dealerMatch && modelMatch && yearMatch && priceMatch && centerMatch && userMatch;
     });
 });
 
@@ -163,11 +222,16 @@ function resetFilters() {
         dealer_center_FK: "",
         car_model: "",
         year: "",
-        price: ""
+        price: "",
+        user_id: ""
     };
 }
 
 onBeforeMount(async () => {
+    await userStore.fetchUser();
+    if (isSuperuser.value) {
+        await userStore.fetchUsers();
+    }
     await fetchCars();
     await fetchDealers();
     await fetchDealerCenters();
@@ -200,7 +264,7 @@ async function exportToWord() {
         <div class="p-2">
             <form @submit.prevent="onCarsAdd">
                 <h4>Ввод данных</h4>
-                <div class="row">
+                <div class="row align-items-center g-2">
                     <div class="col">
                         <div class="form-floating">
                             <select class="form-select" v-model="carsToAdd.dealer_FK_id" required>
@@ -230,7 +294,8 @@ async function exportToWord() {
                     <div class="col">
                         <div class="form-floating">
                             <select class="form-select" v-model="carsToAdd.dealer_center_FK_id" required>
-                                <option :value="d.id" v-for="d in filteredDealerCenters">{{ d.headquarters_location }}
+                                <option :value="d.id" v-for="d in filteredDealerCenters">
+                                    {{ d.headquarters_location }}
                                 </option>
                             </select>
                             <label for="floatingInput">Dealer Center</label>
@@ -242,8 +307,15 @@ async function exportToWord() {
                     <div class="col-auto">
                         <img v-if="carsAddImageUrl" :src="carsAddImageUrl" style="max-height: 60px;" alt="">
                     </div>
-                    <div class="col-auto d-flex align-self-center">
-                        <button class="btn btn-primary">Добавить</button>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-secondary" @click="searchCarImage">
+                            Найти фото
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-primary">
+                            Добавить
+                        </button>
                     </div>
                 </div>
             </form>
@@ -287,6 +359,14 @@ async function exportToWord() {
                         </option>
                     </select>
                 </div>
+                <div class="col">
+                    <select class="form-select" v-model="filters.user_id">
+                        <option value="">Users</option>
+                        <option v-for="user in users" :key="user.id" :value="user.id">
+                            {{ user.username }}
+                        </option>
+                    </select>
+                </div>
                 <div class="col-auto">
                     <button class="btn btn-primary" @click="resetFilters">Сбросить</button>
                 </div>
@@ -299,9 +379,9 @@ async function exportToWord() {
                     <div>{{ item.year }}</div>
                     <div>{{ item.price }}</div>
                     <div>{{ item.dealer_center_FK.headquarters_location }}</div>
-                    <div v-if="item.picture">
-                        <img :src="item.picture" style="max-height: 60px; cursor: pointer;" alt="Car image"
-                            @click="onImageClick(item.picture)">
+                    <div v-if="item.picture || item.image_url">
+                        <img :src="item.picture || item.image_url" style="max-height: 60px; cursor: pointer;"
+                            alt="Car image" @click="onImageClick(item.picture || item.image_url)">
                     </div>
                     <div class="d-flex justify-content-end">
                         <button class="btn btn-success  me-1" @click="onCarsEditClick(item)" data-bs-toggle="modal"
